@@ -399,7 +399,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 55; /* выше welcome (50): диалог проектов открывается поверх экрана приветствия */
 }
 .modal {
   background: var(--bg-2);
