@@ -1,7 +1,10 @@
+import { useEffect, useRef } from 'react';
 import { Image as KonvaImage } from 'react-konva';
+import type Konva from 'konva';
 import type { ImageObject } from '../../types';
 import { useAsset } from '../../db/assets';
 import { registerNode } from './registry';
+import { normalizeFilters, isFiltersDefault, filterPipeline, filterAttrs } from '../../lib/filters';
 
 export interface TransformEndPayload {
   scaleX: number;
@@ -24,6 +27,24 @@ interface NodeProps {
 
 export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, onSelect, onTransformEnd, onContextMenu }: NodeProps) {
   const entry = useAsset(obj.assetId);
+  const nodeRef = useRef<Konva.Image | null>(null);
+
+  const f = normalizeFilters(obj.filters);
+  const active = !isFiltersDefault(f);
+  const pipe = active ? filterPipeline(f) : [];
+  const attrs = filterAttrs(f);
+
+  // Фильтры Konva применяются к кэшу ноды — пересобираем его при изменениях
+  useEffect(() => {
+    const node = nodeRef.current;
+    if (!node) return;
+    if (active && entry) {
+      node.cache({ pixelRatio: 2 });
+    } else {
+      node.clearCache();
+    }
+    node.getLayer()?.batchDraw();
+  }, [active, entry, obj.width, obj.height, obj.crop, f.brightness, f.contrast, f.saturation, f.blur, f.grayscale, f.sepia]);
 
   const crop = obj.crop
     ? { x: obj.crop.x, y: obj.crop.y, width: obj.crop.width, height: obj.crop.height }
@@ -32,8 +53,16 @@ export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, 
   return (
     <KonvaImage
       id={obj.id}
-      ref={(node) => registerNode(obj.id, node)}
+      ref={(node) => {
+        nodeRef.current = node;
+        registerNode(obj.id, node);
+      }}
       image={entry?.el}
+      filters={pipe}
+      brightness={attrs.brightness}
+      contrast={attrs.contrast}
+      saturation={attrs.saturation}
+      blurRadius={attrs.blurRadius}
       x={obj.x}
       y={obj.y}
       offsetX={obj.width / 2}

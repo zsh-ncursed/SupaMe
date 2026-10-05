@@ -13,7 +13,8 @@ import {
   BtnRow,
 } from '../fields';
 import { useTransientUpdate } from '../useTransientUpdate';
-import type { ImageObject, TextObject, BubbleObject, EditorObject, TextAlign, TextTransform, BubbleShape } from '../../types';
+import type { ImageObject, ImageFilters, TextObject, BubbleObject, EditorObject, TextAlign, TextTransform, BubbleShape } from '../../types';
+import { DEFAULT_FILTERS, normalizeFilters, isFiltersDefault } from '../../lib/filters';
 
 export function ObjectPanel({ obj }: { obj: EditorObject }) {
   return (
@@ -125,6 +126,63 @@ function ImageSection({ obj }: { obj: ImageObject }) {
           </BtnRow>
         </div>
       )}
+      <SectionTitle>Фильтры</SectionTitle>
+      <FiltersSection obj={obj} />
+    </>
+  );
+}
+
+function FiltersSection({ obj }: { obj: ImageObject }) {
+  const tf = useTransientUpdate();
+  const st = useEditor.getState;
+  const f = normalizeFilters(obj.filters);
+  const set = (patch: Partial<ImageFilters>) =>
+    tf(obj.id, { filters: { ...f, ...patch } } as Partial<EditorObject>);
+
+  return (
+    <>
+      <div className="grid-2">
+        <CheckField label="Ч/Б" checked={f.grayscale} onChange={(v) => set({ grayscale: v })} />
+        <CheckField label="Сепия" checked={f.sepia} onChange={(v) => set({ sepia: v })} />
+      </div>
+      <SliderField
+        label="Яркость"
+        value={f.brightness - 100}
+        min={-100}
+        max={100}
+        onChange={(v) => set({ brightness: Math.round(v) + 100 })}
+      />
+      <SliderField
+        label="Контраст"
+        value={f.contrast}
+        min={-100}
+        max={100}
+        onChange={(v) => set({ contrast: Math.round(v) })}
+      />
+      <SliderField
+        label="Насыщенность"
+        value={f.saturation - 100}
+        min={-100}
+        max={100}
+        onChange={(v) => set({ saturation: Math.round(v) + 100 })}
+      />
+      <SliderField
+        label="Размытие"
+        value={f.blur}
+        min={0}
+        max={30}
+        onChange={(v) => set({ blur: Math.round(v) })}
+        display={(v) => `${Math.round(v)} px`}
+      />
+      <BtnRow>
+        <button
+          className="btn btn--sm"
+          disabled={isFiltersDefault(f)}
+          onClick={() => st().updateObject(obj.id, { filters: { ...DEFAULT_FILTERS } })}
+        >
+          Сбросить фильтры
+        </button>
+      </BtnRow>
     </>
   );
 }

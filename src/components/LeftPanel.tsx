@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '../store/editorStore';
 import { addImageFiles, addTextObject, addCaption, addBubbleObject, bubblePresetLabel, addAssetObject } from '../lib/addObjects';
+import { TEMPLATES, applyTemplate } from '../lib/templates';
 import { listAssets } from '../db/idb';
 import { useAsset } from '../db/assets';
 import type { BubbleShape, EditorObject } from '../types';
 
-type Tab = 'images' | 'text' | 'bubbles' | 'layers';
+type Tab = 'images' | 'text' | 'bubbles' | 'templates' | 'layers';
 
 const BUBBLE_SHAPES: BubbleShape[] = ['rounded-rect', 'ellipse', 'cloud', 'shout', 'rect'];
 
@@ -24,13 +25,16 @@ export function LeftPanel() {
     <aside className="leftpanel">
       <nav className="tabs">
         <button className={`tabs__tab${tab === 'images' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('images')}>
-          Картинки
+          Фото
         </button>
         <button className={`tabs__tab${tab === 'text' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('text')}>
           Текст
         </button>
         <button className={`tabs__tab${tab === 'bubbles' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('bubbles')}>
           Бабблы
+        </button>
+        <button className={`tabs__tab${tab === 'templates' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('templates')}>
+          Шаблоны
         </button>
         <button className={`tabs__tab${tab === 'layers' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('layers')}>
           Слои
@@ -40,6 +44,7 @@ export function LeftPanel() {
       {tab === 'images' && <ImagesTab />}
       {tab === 'text' && <TextTab />}
       {tab === 'bubbles' && <BubblesTab />}
+      {tab === 'templates' && <TemplatesTab />}
       {tab === 'layers' && <LayersTab />}
 
       <input
@@ -124,6 +129,51 @@ function BubblesTab() {
         </button>
       ))}
       <div className="panel-note">Хвостик баббла можно тянуть за синюю ручку (у выделенного баббла)</div>
+    </div>
+  );
+}
+
+function TemplatesTab() {
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="panel-section">
+      <div className="tpl-grid">
+        {TEMPLATES.map((t) => (
+          <button
+            key={t.id}
+            className="tpl-card"
+            disabled={busy !== null}
+            onClick={() => {
+              setBusy(true);
+              void applyTemplate(t)
+                .catch(() => useEditor.getState().notify('Не удалось применить шаблон', 'error'))
+                .finally(() => setBusy(false));
+            }}
+          >
+            <span className="tpl-preview">
+              {t.preview.map((b, i) => (
+                <span
+                  key={i}
+                  className="tpl-block"
+                  style={{
+                    left: `${b.x}%`,
+                    top: `${b.y}%`,
+                    width: `${b.w}%`,
+                    height: `${b.h}%`,
+                    background: b.color,
+                  }}
+                />
+              ))}
+            </span>
+            <span className="tpl-name">{t.name}</span>
+            <span className="tpl-hint">{t.hint}</span>
+          </button>
+        ))}
+      </div>
+      <div className="panel-note">
+        Шаблон создаёт новый проект с заглушками — замените их своим изображением и текстом. Текущий проект
+        останется в списке проектов.
+      </div>
     </div>
   );
 }

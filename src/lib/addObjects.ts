@@ -3,6 +3,7 @@ import { useEditor } from '../store/editorStore';
 import { addAsset, getAssetEntry } from '../db/assets';
 import { uid } from './utils';
 import { CAPTION_FONT, BUBBLE_FONT, DEFAULT_FONT } from './fonts';
+import { DEFAULT_FILTERS } from './filters';
 import type { BubbleShape, ImageObject, TextObject, BubbleObject, EditorObject } from '../types';
 
 /** Добавить на холст объект существующего ассета (из панели «Картинки») */
@@ -34,7 +35,7 @@ export async function addAssetObject(assetId: string): Promise<void> {
     flipX: false,
     flipY: false,
     crop: null,
-    filters: { brightness: 100, contrast: 100, saturation: 100 },
+    filters: { ...DEFAULT_FILTERS },
   };
   useEditor.getState().addObject(obj);
 }
@@ -73,7 +74,7 @@ export async function addImageFiles(files: File[]): Promise<void> {
         flipX: false,
         flipY: false,
         crop: null,
-        filters: { brightness: 100, contrast: 100, saturation: 100 },
+        filters: { ...DEFAULT_FILTERS },
       };
       created.push(obj);
     } catch (err) {

@@ -466,6 +466,32 @@ input[type='color'] {
 }
 input[type='range'] { accent-color: var(--accent); }
 
+/* ---------- шаблоны ---------- */
+.tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tpl-card {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+.tpl-card:hover:not(:disabled) { border-color: var(--accent-2); }
+.tpl-card:disabled { opacity: 0.6; cursor: default; }
+.tpl-preview {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.tpl-block { position: absolute; border-radius: 2px; }
+.tpl-name { display: block; font-size: 12px; font-weight: 600; }
+.tpl-hint { display: block; font-size: 10.5px; color: var(--text-dim); margin-top: 2px; }
+
 /* ---------- контекстное меню ---------- */
 .ctx-menu {
   position: fixed;

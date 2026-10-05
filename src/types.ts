@@ -33,9 +33,18 @@ export interface BaseObject {
 }
 
 export interface ImageFilters {
-  brightness: number; // 100 = норма
+  /** Яркость: 0..200, 100 = норма */
+  brightness: number;
+  /** Контраст: -100..100, 0 = норма */
   contrast: number;
+  /** Насыщенность: 0..200, 100 = норма */
   saturation: number;
+  /** Радиус размытия в px, 0 = без размытия */
+  blur: number;
+  /** Чёрно-белый фильтр */
+  grayscale: boolean;
+  /** Сепия */
+  sepia: boolean;
 }
 
 export interface ImageObject extends BaseObject {

@@ -80,6 +80,11 @@ async function renderOffscreen(
     const node = getNode(obj.id);
     if (!node) continue;
     const clone = node.clone({ draggable: false, listening: false });
+    // фильтрованные изображения: клон без кэша не отрисует фильтры
+    const flt = clone.getAttr('filters');
+    if (Array.isArray(flt) && flt.length) {
+      clone.cache({ pixelRatio: Math.max(1, opts.scale) });
+    }
     layer.add(clone);
   }
   layer.draw();
