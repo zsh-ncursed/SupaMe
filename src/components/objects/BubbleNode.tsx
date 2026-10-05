@@ -19,6 +19,7 @@ export interface BubbleNodeProps {
   onTailStart: (id: string) => void;
   onTailMove: (id: string, tipX: number, tipY: number) => void;
   onTailEnd: (id: string) => void;
+  onContextMenu: (id: string, clientX: number, clientY: number) => void;
 }
 
 type SceneCtx = {
@@ -189,6 +190,10 @@ export function BubbleNode(props: BubbleNodeProps) {
       onDragMove={(e) => props.onDragMove(obj.id, e.target.x(), e.target.y())}
       onDragEnd={() => props.onDragEnd(obj.id)}
       onMouseDown={(e) => props.onSelect(obj.id, e.evt.shiftKey)}
+      onContextMenu={(e) => {
+        e.evt.preventDefault();
+        props.onContextMenu(obj.id, e.evt.clientX, e.evt.clientY);
+      }}
       onTap={(e) => props.onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))}
       onTransformEnd={(e) =>
         props.onTransformEnd(obj.id, {

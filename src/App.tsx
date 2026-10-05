@@ -76,6 +76,12 @@ export default function App() {
       } else if (mod && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         st.selectAll();
+      } else if (mod && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        st.copySelected();
+      } else if (mod && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        st.pasteClipboard();
       } else if (mod && e.key === ']') {
         e.preventDefault();
         st.moveLayer(st.selectedIds, 'up');

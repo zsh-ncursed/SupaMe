@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Stage, Layer, Rect, Image as KonvaImage, Transformer } from 'react-konva';
+import { Stage, Layer, Rect, Line, Image as KonvaImage, Transformer } from 'react-konva';
 import type Konva from 'konva';
 import { useEditor } from '../store/editorStore';
 import { useAsset } from '../db/assets';
@@ -7,14 +7,23 @@ import { ImageNode } from './objects/ImageNode';
 import type { TransformEndPayload } from './objects/ImageNode';
 import { TextNode } from './objects/TextNode';
 import { BubbleNode } from './objects/BubbleNode';
+import { ContextMenu } from './ContextMenu';
+import type { ContextMenuState } from './ContextMenu';
 import { getNode } from './objects/registry';
 import { setStage } from '../lib/stageHolder';
 import { clamp } from '../lib/utils';
 import { addImageFiles, addTextObject } from '../lib/addObjects';
 import { MIN_FONT_SIZE } from '../types';
 
+const SNAP_PX = 6; // порог привязки в экранных пикселях
+
 interface Props {
   onPickImages: () => void;
+}
+
+interface Guides {
+  v: number[];
+  h: number[];
 }
 
 export function CanvasStage({ onPickImages }: Props) {
@@ -22,6 +31,8 @@ export function CanvasStage({ onPickImages }: Props) {
   const trRef = useRef<Konva.Transformer | null>(null);
   const [box, setBox] = useState({ w: 900, h: 600 });
   const [dragOver, setDragOver] = useState(false);
+  const [guides, setGuides] = useState<Guides>({ v: [], h: [] });
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
 
   const canvas = useEditor((s) => s.canvas);
   const objects = useEditor((s) => s.objects);
@@ -81,11 +92,53 @@ export function CanvasStage({ onPickImages }: Props) {
 
   const single = selectedIds.length === 1 ? objects.find((o) => o.id === selectedIds[0]) : null;
 
+  // --- Привязка к краям/центру холста с направляющими (ТЗ 5.5.7) ---
+  const snapEdge = (
+    edges: number[],
+    targets: number[],
+    th: number
+  ): { delta: number; guide: number } | null => {
+    let best: { delta: number; guide: number } | null = null;
+    for (const o of edges) {
+      for (const c of targets) {
+        const d = c - o;
+        if (Math.abs(d) <= th && (best === null || Math.abs(d) < Math.abs(best.delta))) {
+          best = { delta: d, guide: c };
+        }
+      }
+    }
+    return best;
+  };
+
   const handleDragStart = () => useEditor.getState().beginTransient();
 
   const handleDragMove = (id: string, x: number, y: number) => {
-    useEditor.getState().updateObject(id, { x: Math.round(x), y: Math.round(y) }, { history: false });
+    const st = useEditor.getState();
+    const obj = st.objects.find((o) => o.id === id);
+    let nx = Math.round(x);
+    let ny = Math.round(y);
+    const gv: number[] = [];
+    const gh: number[] = [];
+    if (obj) {
+      const th = SNAP_PX / st.zoom;
+      const W = st.canvas.width;
+      const H = st.canvas.height;
+      const bx = snapEdge([nx - obj.width / 2, nx + obj.width / 2], [0, W / 2, W], th);
+      if (bx) {
+        nx = Math.round(nx + bx.delta);
+        gv.push(bx.guide);
+      }
+      const by = snapEdge([ny - obj.height / 2, ny + obj.height / 2], [0, H / 2, H], th);
+      if (by) {
+        ny = Math.round(ny + by.delta);
+        gh.push(by.guide);
+      }
+    }
+    st.updateObject(id, { x: nx, y: ny }, { history: false });
+    setGuides({ v: gv, h: gh });
   };
+
+  const clearGuides = () => setGuides({ v: [], h: [] });
 
   const handleDragEnd = () => {
     const st = useEditor.getState();
@@ -95,6 +148,7 @@ export function CanvasStage({ onPickImages }: Props) {
       if (!node || !obj || obj.locked) continue;
       st.updateObject(id, { x: Math.round(node.x()), y: Math.round(node.y()) }, { history: false });
     }
+    clearGuides();
     useEditor.getState().endTransient();
   };
 
@@ -136,7 +190,32 @@ export function CanvasStage({ onPickImages }: Props) {
     node.scaleX(1);
     node.scaleY(1);
     st.updateObject(id, patch, { history: false });
+    clearGuides();
     useEditor.getState().endTransient();
+  };
+
+  // --- Контекстное меню (ТЗ 5.13) ---
+  const clampMenu = (clientX: number, clientY: number) => ({
+    x: Math.min(clientX, window.innerWidth - 230),
+    y: Math.min(clientY, window.innerHeight - 330),
+  });
+
+  const handleObjContextMenu = (id: string, clientX: number, clientY: number) => {
+    const st = useEditor.getState();
+    if (!st.selectedIds.includes(id)) st.select([id]);
+    setCtxMenu({
+      ...clampMenu(clientX, clientY),
+      targetId: id,
+      pasteable: st.clipboard.length > 0,
+    });
+  };
+
+  const handleCanvasContextMenu = (clientX: number, clientY: number) => {
+    setCtxMenu({
+      ...clampMenu(clientX, clientY),
+      targetId: null,
+      pasteable: useEditor.getState().clipboard.length > 0,
+    });
   };
 
   const handleSelect = (id: string, additive: boolean) => {
@@ -166,6 +245,7 @@ export function CanvasStage({ onPickImages }: Props) {
     <div
       ref={outerRef}
       className={`canvas-outer${dragOver ? ' canvas-outer--drag' : ''}`}
+      onContextMenu={(e) => e.preventDefault()}
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -195,6 +275,12 @@ export function CanvasStage({ onPickImages }: Props) {
               useEditor.getState().clearSelection();
             }
           }}
+          onContextMenu={(e) => {
+            e.evt.preventDefault();
+            if (e.target === e.currentTarget || e.target.name() === 'canvas-bg') {
+              handleCanvasContextMenu(e.evt.clientX, e.evt.clientY);
+            }
+          }}
         >
           <Layer>
             <Rect
@@ -222,6 +308,7 @@ export function CanvasStage({ onPickImages }: Props) {
                     onDragEnd={handleDragEnd}
                     onSelect={handleSelect}
                     onTransformEnd={handleTransformEnd}
+                    onContextMenu={handleObjContextMenu}
                   />
                 );
               }
@@ -236,6 +323,7 @@ export function CanvasStage({ onPickImages }: Props) {
                     onDragEnd={handleDragEnd}
                     onSelect={handleSelect}
                     onTransformEnd={handleTransformEnd}
+                    onContextMenu={handleObjContextMenu}
                   />
                 );
               }
@@ -254,9 +342,30 @@ export function CanvasStage({ onPickImages }: Props) {
                   onTailStart={handleTailStart}
                   onTailMove={handleTailMove}
                   onTailEnd={handleTailEnd}
+                  onContextMenu={handleObjContextMenu}
                 />
               );
             })}
+            {!exporting && guides.v.map((gx, i) => (
+              <Line
+                key={`guide-v${i}`}
+                points={[gx, 0, gx, canvas.height]}
+                stroke="#42a5f5"
+                strokeWidth={1 / zoom}
+                dash={[6 / zoom, 4 / zoom]}
+                listening={false}
+              />
+            ))}
+            {!exporting && guides.h.map((gy, i) => (
+              <Line
+                key={`guide-h${i}`}
+                points={[0, gy, canvas.width, gy]}
+                stroke="#42a5f5"
+                strokeWidth={1 / zoom}
+                dash={[6 / zoom, 4 / zoom]}
+                listening={false}
+              />
+            ))}
             <Transformer
               ref={trRef}
               rotateEnabled
@@ -307,6 +416,8 @@ export function CanvasStage({ onPickImages }: Props) {
           <button className="zoom-btn zoom-btn--wide" onClick={zoomFit}>Вписать</button>
         </div>
       )}
+
+      {!exporting && <ContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />}
     </div>
   );
 }

@@ -19,9 +19,10 @@ interface NodeProps {
   onDragEnd: (id: string) => void;
   onSelect: (id: string, additive: boolean) => void;
   onTransformEnd: (id: string, payload: TransformEndPayload) => void;
+  onContextMenu: (id: string, clientX: number, clientY: number) => void;
 }
 
-export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, onSelect, onTransformEnd }: NodeProps) {
+export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, onSelect, onTransformEnd, onContextMenu }: NodeProps) {
   const entry = useAsset(obj.assetId);
 
   const crop = obj.crop
@@ -49,6 +50,10 @@ export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, 
       onDragMove={(e) => onDragMove(obj.id, e.target.x(), e.target.y())}
       onDragEnd={() => onDragEnd(obj.id)}
       onMouseDown={(e) => onSelect(obj.id, e.evt.shiftKey)}
+      onContextMenu={(e) => {
+        e.evt.preventDefault();
+        onContextMenu(obj.id, e.evt.clientX, e.evt.clientY);
+      }}
       onTap={(e) => onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))}
       onTransformEnd={(e) =>
         onTransformEnd(obj.id, {

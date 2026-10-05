@@ -35,6 +35,8 @@ interface EditorState {
   transientSnapshot: string | null;
   // Уведомления
   toast: Toast | null;
+  // Внутренний буфер обмена (копирование объектов)
+  clipboard: EditorObject[];
   // Счётчик версий списка проектов (для обновления диалога)
   projectsVersion: number;
 
@@ -56,6 +58,8 @@ interface EditorState {
   replaceObject: (next: EditorObject, opts?: { history?: boolean }) => void;
   deleteObjects: (ids: string[]) => void;
   duplicateObjects: (ids: string[]) => void;
+  copySelected: () => void;
+  pasteClipboard: () => void;
 
   beginTransient: () => void;
   endTransient: () => void;
@@ -114,6 +118,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
   future: [],
   transientSnapshot: null,
   toast: null,
+  clipboard: [],
   projectsVersion: 0,
 
   newProject: (canvas) =>
@@ -248,6 +253,34 @@ export const useEditor = create<EditorState>()((set, get) => ({
     if (!clones.length) return;
     set((st) =>
       withHistory(st, {
+        objects: [...s.objects, ...clones],
+        selectedIds: clones.map((c) => c.id),
+        saveStatus: 'dirty',
+      })
+    );
+  },
+
+  copySelected: () => {
+    const s = get();
+    const copies = s.objects
+      .filter((o) => s.selectedIds.includes(o.id))
+      .map((o) => JSON.parse(JSON.stringify(o)) as EditorObject);
+    if (copies.length) set({ clipboard: copies });
+  },
+
+  pasteClipboard: () => {
+    const s = get();
+    if (!s.clipboard.length) return;
+    const clones = s.clipboard.map((o) => {
+      const copy = JSON.parse(JSON.stringify(o)) as EditorObject;
+      copy.id = uid();
+      copy.x += 24;
+      copy.y += 24;
+      copy.locked = false;
+      return copy;
+    });
+    set(
+      withHistory(s, {
         objects: [...s.objects, ...clones],
         selectedIds: clones.map((c) => c.id),
         saveStatus: 'dirty',
