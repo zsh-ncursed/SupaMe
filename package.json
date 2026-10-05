@@ -1,0 +1,35 @@
+{
+  "name": "supame",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SupaMe — desktop meme editor with a local web interface",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "start": "node launcher.mjs",
+    "serve": "npm run build && node launcher.mjs"
+  },
+  "dependencies": {
+    "konva": "^9.3.16",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-konva": "^18.2.10",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@fontsource/anton": "^5.0.18",
+    "@fontsource/inter": "^5.0.17",
+    "@fontsource/jetbrains-mono": "^5.0.19",
+    "@fontsource/marck-script": "^5.0.15",
+    "@fontsource/oswald": "^5.0.16",
+    "@fontsource/roboto-condensed": "^5.0.16",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}
