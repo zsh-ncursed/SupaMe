@@ -9,8 +9,10 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "start": "node launcher.mjs",
-    "serve": "npm run build && node launcher.mjs"
+    "start": "node desktop/tray.mjs",
+    "browser": "node desktop/launcher.mjs",
+    "serve": "npm run build && node desktop/launcher.mjs",
+    "icon": "node desktop/gen-icon.mjs"
   },
   "dependencies": {
     "konva": "^9.3.16",
@@ -29,6 +31,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "systray2": "^2.1.4",
     "typescript": "^5.6.3",
     "vite": "^5.4.10"
   }
