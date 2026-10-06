@@ -10,6 +10,7 @@ import { Toast } from './components/Toast';
 import { Welcome } from './components/Welcome';
 import { useEditor } from './store/editorStore';
 import { useUi } from './store/uiStore';
+import type { ToolId } from './store/uiStore';
 import { startAutosave, forceSave } from './lib/autosave';
 import { addImageFiles } from './lib/addObjects';
 
@@ -104,6 +105,7 @@ export default function App() {
         }
       } else if (e.key === 'Escape') {
         st.clearSelection();
+        useUi.getState().setTool('select');
         useUi.getState().closeExport();
         useUi.getState().closeProjects();
       } else if (e.key.startsWith('Arrow')) {
@@ -113,6 +115,19 @@ export default function App() {
           e.preventDefault();
           moveSelected(dx, dy, e.shiftKey ? 10 : 1);
         }
+      } else if (!mod && !e.altKey && e.key.length === 1) {
+        // Быстрый выбор инструмента (V, P, N, L, R, O, F)
+        const toolKeys: Record<string, ToolId> = {
+          v: 'select',
+          p: 'pencil',
+          n: 'pen',
+          l: 'line',
+          r: 'rect',
+          o: 'ellipse',
+          f: 'fill',
+        };
+        const t = toolKeys[e.key.toLowerCase()];
+        if (t) useUi.getState().setTool(t);
       }
     };
     window.addEventListener('keydown', onKey);

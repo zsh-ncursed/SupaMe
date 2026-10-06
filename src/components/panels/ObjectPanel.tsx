@@ -13,7 +13,7 @@ import {
   BtnRow,
 } from '../fields';
 import { useTransientUpdate } from '../useTransientUpdate';
-import type { ImageObject, ImageFilters, TextObject, BubbleObject, EditorObject, TextAlign, TextTransform, BubbleShape } from '../../types';
+import type { ImageObject, ImageFilters, TextObject, BubbleObject, ShapeObject, ShapeVariant, EditorObject, TextAlign, TextTransform, BubbleShape } from '../../types';
 import { DEFAULT_FILTERS, normalizeFilters, isFiltersDefault } from '../../lib/filters';
 
 export function ObjectPanel({ obj }: { obj: EditorObject }) {
@@ -23,12 +23,24 @@ export function ObjectPanel({ obj }: { obj: EditorObject }) {
       {obj.kind === 'image' && <ImageSection obj={obj} />}
       {obj.kind === 'text' && <TextSection obj={obj} />}
       {obj.kind === 'bubble' && <BubbleSection obj={obj} />}
+      {obj.kind === 'shape' && <ShapeSection obj={obj} />}
     </div>
   );
 }
 
 function kindLabel(obj: EditorObject): string {
-  return obj.kind === 'image' ? 'Изображение' : obj.kind === 'text' ? 'Текст' : 'Баббл';
+  if (obj.kind === 'image') return 'Изображение';
+  if (obj.kind === 'text') return 'Текст';
+  if (obj.kind === 'bubble') return 'Баббл';
+  const names: Record<ShapeVariant, string> = {
+    rect: 'Прямоугольник',
+    ellipse: 'Овал',
+    triangle: 'Треугольник',
+    line: 'Линия',
+    pencil: 'Карандаш',
+    pen: 'Перо',
+  };
+  return names[obj.shape];
 }
 
 function CommonSection({ obj }: { obj: EditorObject }) {
@@ -183,6 +195,46 @@ function FiltersSection({ obj }: { obj: ImageObject }) {
           Сбросить фильтры
         </button>
       </BtnRow>
+    </>
+  );
+}
+
+// ---------- Фигуры и штрихи (инструменты Paint) ----------
+
+const VARIANT_OPTS: { value: ShapeVariant; label: string }[] = [
+  { value: 'rect', label: 'Прямоугольник' },
+  { value: 'ellipse', label: 'Овал' },
+  { value: 'triangle', label: 'Треугольник' },
+  { value: 'line', label: 'Линия' },
+  { value: 'pencil', label: 'Карандаш' },
+  { value: 'pen', label: 'Перо' },
+];
+
+function ShapeSection({ obj }: { obj: ShapeObject }) {
+  const tf = useTransientUpdate();
+  const st = useEditor.getState;
+  const filled = obj.shape === 'rect' || obj.shape === 'ellipse' || obj.shape === 'triangle';
+
+  return (
+    <>
+      <SelectField label="Фигура" value={obj.shape} options={VARIANT_OPTS} onChange={(v) => st().updateObject(obj.id, { shape: v })} />
+      {filled && (
+        <div className="grid-2">
+          <ColorField label="Заливка" value={obj.fill ?? '#FFFFFF'} onChange={(v) => tf(obj.id, { fill: v } as Partial<EditorObject>)} />
+          <CheckField
+            label="Без заливки"
+            checked={obj.fill === null}
+            onChange={(v) => st().updateObject(obj.id, { fill: v ? null : '#FFFFFF' })}
+          />
+        </div>
+      )}
+      <div className="grid-2">
+        <ColorField label="Обводка" value={obj.strokeColor} onChange={(v) => tf(obj.id, { strokeColor: v } as Partial<EditorObject>)} />
+        <NumField label="Толщина" value={obj.strokeWidth} min={0} max={80} onChange={(v) => tf(obj.id, { strokeWidth: v } as Partial<EditorObject>)} />
+      </div>
+      {obj.shape === 'rect' && (
+        <NumField label="Радиус углов" value={obj.cornerRadius} min={0} max={200} onChange={(v) => tf(obj.id, { cornerRadius: v } as Partial<EditorObject>)} />
+      )}
     </>
   );
 }

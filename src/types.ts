@@ -1,7 +1,7 @@
 // Модель данных проекта SupaMe (по разделу 9 ТЗ)
 // Позиция объектов — центр (x, y), порядок слоёв = порядок в массиве objects (последний — верхний).
 
-export type ObjectKind = 'image' | 'text' | 'bubble';
+export type ObjectKind = 'image' | 'text' | 'bubble' | 'shape';
 
 export interface CanvasBackground {
   /** 'color' — сплошной цвет, 'image' — изображение-фон */
@@ -130,7 +130,34 @@ export interface BubbleObject extends BaseObject {
   text: BubbleText;
 }
 
-export type EditorObject = ImageObject | TextObject | BubbleObject;
+/** Геометрические примитивы и штрихи (инструменты Paint) */
+export type ShapeVariant =
+  | 'rect'      // прямоугольник
+  | 'ellipse'   // овал
+  | 'triangle'  // треугольник
+  | 'line'      // прямая линия
+  | 'pencil'    // карандаш: ломаная линия
+  | 'pen';      // перо: сглаженная кривая
+
+export interface ShapeObject extends BaseObject {
+  kind: 'shape';
+  shape: ShapeVariant;
+  /** Цвет заливки; null — без заливки (у линий и штрихов) */
+  fill: string | null;
+  strokeColor: string;
+  strokeWidth: number;
+  cornerRadius: number;
+  /**
+   * Точки пути относительно центра объекта [x0,y0,x1,y1,…].
+   * Для line/pencil/pen — сам путь; для triangle — 3 вершины;
+   * для rect/ellipse — пустой массив (размер в width/height).
+   */
+  points: number[];
+  /** Сглаживание кривой: 0 = карандаш, 0.5 = перо */
+  tension: number;
+}
+
+export type EditorObject = ImageObject | TextObject | BubbleObject | ShapeObject;
 
 export interface ProjectData {
   version: number;

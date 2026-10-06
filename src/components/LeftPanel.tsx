@@ -193,6 +193,17 @@ function LayersTab() {
 function layerName(o: EditorObject): string {
   if (o.kind === 'image') return 'Изображение';
   if (o.kind === 'text') return `Текст: ${o.text.slice(0, 18) || '…'}`;
+  if (o.kind === 'shape') {
+    const names: Record<string, string> = {
+      rect: 'Прямоугольник',
+      ellipse: 'Овал',
+      triangle: 'Треугольник',
+      line: 'Линия',
+      pencil: 'Карандаш',
+      pen: 'Перо',
+    };
+    return names[o.shape] ?? 'Фигура';
+  }
   return `Баббл: ${o.text.value.slice(0, 14) || '—'}`;
 }
 
