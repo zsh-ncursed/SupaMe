@@ -4,6 +4,7 @@ import { addImageFiles, addTextObject, addCaption, addBubbleObject, bubblePreset
 import { TEMPLATES, applyTemplate } from '../lib/templates';
 import { listAssets } from '../db/idb';
 import { useAsset } from '../db/assets';
+import { PaintToolbar } from './PaintToolbar';
 import type { BubbleShape, EditorObject } from '../types';
 
 type Tab = 'images' | 'text' | 'bubbles' | 'templates' | 'layers';
@@ -23,42 +24,45 @@ export function LeftPanel() {
 
   return (
     <aside className="leftpanel">
-      <nav className="tabs">
-        <button className={`tabs__tab${tab === 'images' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('images')}>
-          Фото
-        </button>
-        <button className={`tabs__tab${tab === 'text' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('text')}>
-          Текст
-        </button>
-        <button className={`tabs__tab${tab === 'bubbles' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('bubbles')}>
-          Бабблы
-        </button>
-        <button className={`tabs__tab${tab === 'templates' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('templates')}>
-          Шаблоны
-        </button>
-        <button className={`tabs__tab${tab === 'layers' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('layers')}>
-          Слои
-        </button>
-      </nav>
+      <PaintToolbar />
+      <div className="leftpanel__body">
+        <nav className="tabs">
+          <button className={`tabs__tab${tab === 'images' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('images')} title="Фото">
+            🖼️
+          </button>
+          <button className={`tabs__tab${tab === 'text' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('text')} title="Текст">
+            ✍️
+          </button>
+          <button className={`tabs__tab${tab === 'bubbles' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('bubbles')} title="Бабблы">
+            💬
+          </button>
+          <button className={`tabs__tab${tab === 'templates' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('templates')} title="Шаблоны">
+            🧩
+          </button>
+          <button className={`tabs__tab${tab === 'layers' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('layers')} title="Слои">
+            <span className="icon-layers"><span /><span /><span /></span>
+          </button>
+        </nav>
 
-      {tab === 'images' && <ImagesTab />}
-      {tab === 'text' && <TextTab />}
-      {tab === 'bubbles' && <BubblesTab />}
-      {tab === 'templates' && <TemplatesTab />}
-      {tab === 'layers' && <LayersTab />}
+        {tab === 'images' && <ImagesTab />}
+        {tab === 'text' && <TextTab />}
+        {tab === 'bubbles' && <BubblesTab />}
+        {tab === 'templates' && <TemplatesTab />}
+        {tab === 'layers' && <LayersTab />}
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        multiple
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          const files = Array.from(e.target.files ?? []);
-          if (files.length) void addImageFiles(files);
-          e.target.value = '';
-        }}
-      />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            if (files.length) void addImageFiles(files);
+            e.target.value = '';
+          }}
+        />
+      </div>
     </aside>
   );
 }

@@ -16,7 +16,6 @@ import { addImageFiles, addTextObject } from '../lib/addObjects';
 import { MIN_FONT_SIZE } from '../types';
 import type { ShapeObject, ShapeVariant } from '../types';
 import { ShapeNode } from './objects/ShapeNode';
-import { PaintToolbar } from './PaintToolbar';
 import { useUi } from '../store/uiStore';
 import type { ToolId } from '../store/uiStore';
 
@@ -641,7 +640,6 @@ export function CanvasStage({ onPickImages }: Props) {
         </div>
       )}
 
-      {!exporting && <PaintToolbar />}
       {!exporting && <ContextMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} />}
     </div>
   );
