@@ -1,4 +1,7 @@
 // Автосохранение проекта в IndexedDB (по ТЗ 5.11.2: 1–3 сек после изменений)
+// + надёжное сохранение при закрытии (код-ревью): beforeunload асинхронен,
+// поэтому дополнительно ловим pagehide и visibilitychange->hidden — они срабатывают
+// раньше и надёжнее в большинстве браузеров.
 import { useEditor } from '../store/editorStore';
 import { putProject } from '../db/idb';
 import { renderThumbnail } from './stageCapture';
@@ -65,17 +68,27 @@ export function startAutosave(): () => void {
     if (state.saveStatus === 'dirty') schedule();
   });
 
-  const onBeforeUnload = () => {
+  // Немедленный сброс при «уходе» страницы (частые тройные срабатывания
+  // pagehide + visibilitychange + beforeunload — saveNow идемпотентен за счёт флага saving)
+  const flush = () => {
     const st = useEditor.getState();
     if (st.projectId && st.saveStatus === 'dirty') {
       void saveNow();
     }
   };
-  window.addEventListener('beforeunload', onBeforeUnload);
+  const onPageHide = () => flush();
+  const onVisibility = () => {
+    if (document.visibilityState === 'hidden') flush();
+  };
+  window.addEventListener('pagehide', onPageHide);
+  document.addEventListener('visibilitychange', onVisibility);
+  window.addEventListener('beforeunload', flush);
 
   return () => {
     unsub();
-    window.removeEventListener('beforeunload', onBeforeUnload);
+    window.removeEventListener('pagehide', onPageHide);
+    document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('beforeunload', flush);
     if (timer !== undefined) window.clearTimeout(timer);
     started = false;
   };
