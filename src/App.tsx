@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TopBar } from './components/TopBar';
 import { LeftPanel } from './components/LeftPanel';
 import { RightPanel } from './components/panels/RightPanel';
@@ -14,26 +14,27 @@ import type { ToolId } from './store/uiStore';
 import { startAutosave, forceSave } from './lib/autosave';
 import { addImageFiles } from './lib/addObjects';
 
-let arrowTimer: number | undefined;
+const ARROW_DEBOUNCE_MS = 500;
 
-function moveSelected(dx: number, dy: number, step: number) {
+function moveSelected(dx: number, dy: number, step: number, timerRef: { current: number | undefined }) {
   const st = useEditor.getState();
   if (!st.selectedIds.length) return;
-  if (!arrowTimer) st.beginTransient();
+  if (timerRef.current === undefined) st.beginTransient();
   for (const id of st.selectedIds) {
     const o = st.objects.find((x) => x.id === id);
     if (!o || o.locked) continue;
     st.updateObject(id, { x: o.x + dx * step, y: o.y + dy * step }, { history: false });
   }
-  if (arrowTimer !== undefined) window.clearTimeout(arrowTimer);
-  arrowTimer = window.setTimeout(() => {
+  if (timerRef.current !== undefined) window.clearTimeout(timerRef.current);
+  timerRef.current = window.setTimeout(() => {
     useEditor.getState().endTransient();
-    arrowTimer = undefined;
-  }, 500);
+    timerRef.current = undefined;
+  }, ARROW_DEBOUNCE_MS);
 }
 
 export default function App() {
   const [fontsTick, setFontsTick] = useState(0);
+  const arrowTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => startAutosave(), []);
 
@@ -113,7 +114,7 @@ export default function App() {
         const dy = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0;
         if (dx || dy) {
           e.preventDefault();
-          moveSelected(dx, dy, e.shiftKey ? 10 : 1);
+          moveSelected(dx, dy, e.shiftKey ? 10 : 1, arrowTimerRef);
         }
       } else if (!mod && !e.altKey && e.key.length === 1) {
         // Быстрый выбор инструмента (V, P, N, L, R, O, F)
@@ -131,7 +132,10 @@ export default function App() {
       }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (arrowTimerRef.current !== undefined) window.clearTimeout(arrowTimerRef.current);
+    };
   }, []);
 
   // Вставка изображений из буфера обмена

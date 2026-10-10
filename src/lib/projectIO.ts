@@ -71,7 +71,7 @@ export async function parseImportFile(file: File): Promise<ProjectRecord> {
   // Сохраняем вложенные изображения как ассеты с теми же id (или новыми при конфликте)
   for (const a of parsed.assets ?? []) {
     if (!a?.dataUrl) continue;
-    const blob = await dataUrlToBlob(a.dataUrl);
+    const blob = dataUrlToBlob(a.dataUrl);
     const { putAsset, getAsset } = await import('../db/idb');
     let assetId = a.id;
     const existing = await getAsset(assetId).catch(() => undefined);
@@ -107,8 +107,17 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-function dataUrlToBlob(dataUrl: string): Promise<Blob> {
-  return fetch(dataUrl).then((r) => r.blob());
+function dataUrlToBlob(dataUrl: string): Blob {
+  const comma = dataUrl.indexOf(',');
+  if (comma < 0) {
+    throw new Error('Некорректный dataURL в файле проекта');
+  }
+  const meta = dataUrl.slice(0, comma);
+  const mime = /^data:([^;,]*)/.exec(meta)?.[1] || 'application/octet-stream';
+  const binary = atob(dataUrl.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
 }
 
 export function downloadBlob(blob: Blob, fileName: string) {
