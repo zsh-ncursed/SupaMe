@@ -19,7 +19,7 @@ import type { ShapeObject, ShapeVariant } from '../types';
 import { ShapeNode } from './objects/ShapeNode';
 import { useUi } from '../store/uiStore';
 
-const SNAP_PX = 6; // порог привязки в экранных пикселях
+import { SNAP_PX, ZOOM_MIN, ZOOM_MAX, ZOOM_STEP } from '../lib/config';
 
 interface Props {
   onPickImages: () => void;
@@ -74,8 +74,8 @@ export function CanvasStage({ onPickImages }: Props) {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const st = useEditor.getState();
-      const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-      const nz = clamp(st.zoom * factor, 0.25, 4);
+      const factor = e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+      const nz = clamp(st.zoom * factor, ZOOM_MIN, ZOOM_MAX);
       const ratio = nz / st.zoom;
       const rect = el.getBoundingClientRect();
       const cx = e.clientX - rect.left;
@@ -398,7 +398,7 @@ export function CanvasStage({ onPickImages }: Props) {
   // --- Зум ---
   const zoomFit = () => {
     const fit = Math.min((box.w - 48) / canvas.width, (box.h - 48) / canvas.height);
-    useEditor.getState().setZoom(clamp(fit, 0.25, 4));
+    useEditor.getState().setZoom(clamp(fit, ZOOM_MIN, ZOOM_MAX));
   };
 
   return (

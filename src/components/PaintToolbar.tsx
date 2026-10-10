@@ -1,6 +1,7 @@
 // Плавающая панель инструментов Paint (слева сверху над холстом)
 import { useUi } from '../store/uiStore';
 import type { ToolId } from '../store/uiStore';
+import { STROKE_WIDTH_MIN, STROKE_WIDTH_MAX } from '../lib/config';
 
 const TOOLS: { id: ToolId; icon: string; title: string }[] = [
   { id: 'select', icon: '↖', title: 'Выделение (V)' },
@@ -49,8 +50,8 @@ export function PaintToolbar() {
       <div className="ptool-width" title={`Толщина обводки: ${strokeWidth}`}>
         <input
           type="range"
-          min={1}
-          max={40}
+          min={STROKE_WIDTH_MIN}
+          max={STROKE_WIDTH_MAX}
           value={strokeWidth}
           onChange={(e) => st().setStrokeWidth(Number(e.target.value))}
         />

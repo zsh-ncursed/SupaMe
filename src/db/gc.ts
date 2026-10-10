@@ -8,6 +8,7 @@
 // Модуль намеренно НЕ импортирует editorStore, чтобы не создавать цикл:
 // вызовы приходят из editorStore/UI с уже вычисленным extraLive.
 import { listProjects, listAssets, deleteManyAssets } from './idb';
+import { GC_DEBOUNCE_MS } from '../lib/config';
 import { revokeCacheAsset } from './assets';
 import type { ProjectRecord } from '../types';
 
@@ -60,7 +61,10 @@ export async function collectGarbage(extraLive?: Iterable<string>): Promise<stri
 let gcTimer: number | undefined;
 let gcPending: Set<string> | undefined;
 
-export function scheduleCollectGarbage(extraLive?: Iterable<string>, delayMs = 1500): void {
+export function scheduleCollectGarbage(
+  extraLive?: Iterable<string>,
+  delayMs = GC_DEBOUNCE_MS
+): void {
   if (gcPending) {
     for (const id of extraLive ?? []) gcPending.add(id);
   } else {

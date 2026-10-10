@@ -1,6 +1,7 @@
 // Серия правок = одна запись в истории (для слайдеров, цветов, текста)
 import { useRef } from 'react';
 import { useEditor } from '../store/editorStore';
+import { TRANSIENT_DEBOUNCE_MS } from '../lib/config';
 import type { EditorObject } from '../types';
 
 export function useTransientUpdate() {
@@ -19,6 +20,6 @@ export function useTransientUpdate() {
       st.endTransient();
       startedRef.current = false;
       timerRef.current = undefined;
-    }, 700);
+    }, TRANSIENT_DEBOUNCE_MS);
   };
 }

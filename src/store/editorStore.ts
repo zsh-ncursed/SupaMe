@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { CanvasState, EditorObject, ProjectRecord } from '../types';
 import { HISTORY_LIMIT, MIN_CANVAS, MAX_CANVAS } from '../types';
 import { uid, clamp } from '../lib/utils';
+import { ZOOM_MIN, ZOOM_MAX } from '../lib/config';
 import { clearAssetCache } from '../db/assets';
 import { clearNodes } from '../components/objects/registry';
 import { scheduleCollectGarbage } from '../db/gc';
@@ -211,7 +212,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
       })
     ),
 
-  setZoom: (zoom) => set({ zoom: clamp(zoom, 0.25, 4) }),
+  setZoom: (zoom) => set({ zoom: clamp(zoom, ZOOM_MIN, ZOOM_MAX) }),
   setExporting: (exporting) => set({ exporting }),
 
   addObject: (obj) =>
@@ -269,7 +270,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
     // После удаления объекты могли освободить последние ссылки на ассеты — отложенно почистить сирот.
     // extraLive защищает ассеты текущего (возможно ещё не сохранённого) проекта.
     const st = get();
-    scheduleCollectGarbage(currentAssetIds(st), 1500);
+    scheduleCollectGarbage(currentAssetIds(st));
   },
 
   duplicateObjects: (ids) => {

@@ -1,5 +1,6 @@
 // Состояние диалогов, оверлеев и инструментов рисования
 import { create } from 'zustand';
+import { DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR, DEFAULT_STROKE_WIDTH } from '../lib/config';
 
 export type ToolId =
   | 'select'    // выделение и перемещение
@@ -48,9 +49,9 @@ export const useUi = create<UiState>()((set) => ({
   exportOpen: false,
   importOpen: false,
   tool: 'select',
-  strokeColor: '#000000',
-  fillColor: '#FFFFFF',
-  strokeWidth: 6,
+  strokeColor: DEFAULT_STROKE_COLOR,
+  fillColor: DEFAULT_FILL_COLOR,
+  strokeWidth: DEFAULT_STROKE_WIDTH,
   setTool: (tool) => set({ tool }),
   setStrokeColor: (strokeColor) => set({ strokeColor }),
   setFillColor: (fillColor) => set({ fillColor }),

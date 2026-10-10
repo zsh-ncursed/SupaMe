@@ -3,6 +3,7 @@
 // поэтому дополнительно ловим pagehide и visibilitychange->hidden — они срабатывают
 // раньше и надёжнее в большинстве браузеров.
 import { useEditor } from '../store/editorStore';
+import { AUTOSAVE_DEBOUNCE_MS } from './config';
 import { putProject } from '../db/idb';
 import { renderThumbnail } from './stageCapture';
 import type { ProjectRecord } from '../types';
@@ -57,7 +58,7 @@ function schedule() {
   timer = window.setTimeout(() => {
     timer = undefined;
     void saveNow();
-  }, 1200);
+  }, AUTOSAVE_DEBOUNCE_MS);
 }
 
 export function startAutosave(): () => void {

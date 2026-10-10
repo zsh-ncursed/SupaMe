@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useEditor } from '../store/editorStore';
+import { TOAST_DURATION_MS } from '../lib/config';
 
 export function Toast() {
   const toast = useEditor((s) => s.toast);
@@ -7,7 +8,7 @@ export function Toast() {
 
   useEffect(() => {
     if (!toast) return;
-    const t = window.setTimeout(() => closeToast(), 3500);
+    const t = window.setTimeout(() => closeToast(), TOAST_DURATION_MS);
     return () => window.clearTimeout(t);
   }, [toast?.id, closeToast, toast]);
 

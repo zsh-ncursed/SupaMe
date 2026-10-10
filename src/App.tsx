@@ -13,8 +13,7 @@ import { useUi } from './store/uiStore';
 import type { ToolId } from './store/uiStore';
 import { startAutosave, forceSave } from './lib/autosave';
 import { addImageFiles } from './lib/addObjects';
-
-const ARROW_DEBOUNCE_MS = 500;
+import { ARROW_REPEAT_DEBOUNCE_MS } from './lib/config';
 
 function moveSelected(dx: number, dy: number, step: number, timerRef: { current: number | undefined }) {
   const st = useEditor.getState();
@@ -29,7 +28,7 @@ function moveSelected(dx: number, dy: number, step: number, timerRef: { current:
   timerRef.current = window.setTimeout(() => {
     useEditor.getState().endTransient();
     timerRef.current = undefined;
-  }, ARROW_DEBOUNCE_MS);
+  }, ARROW_REPEAT_DEBOUNCE_MS);
 }
 
 export default function App() {
