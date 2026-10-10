@@ -175,6 +175,21 @@ export interface ProjectRecord {
   data: ProjectData;
 }
 
+/**
+ * Лёгкие метаданные проекта для списка «Проекты» — читаются без загрузки
+ * полного ProjectRecord (с Blob'ами объектов), поэтому список мгновенный.
+ */
+export interface ProjectMeta {
+  id: string;
+  name: string;
+  updatedAt: number;
+  width: number;
+  height: number;
+  objectCount: number;
+  /** превью в dataURL (PNG/WebP) */
+  thumbnail: string | null;
+}
+
 export interface AssetRecord {
   id: string;
   name: string;

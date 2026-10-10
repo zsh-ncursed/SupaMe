@@ -1,8 +1,8 @@
-// Raw IndexedDB: хранилища projects и assets (без внешних зависимостей)
-import type { AssetRecord, ProjectRecord } from '../types';
+// Raw IndexedDB: хранилища projects, project-meta и assets (без внешних зависимостей)
+import type { AssetRecord, ProjectMeta, ProjectRecord } from '../types';
 
 const DB_NAME = 'supame-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -18,6 +18,9 @@ function openDb(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains('assets')) {
         db.createObjectStore('assets', { keyPath: 'id' });
       }
+      if (!db.objectStoreNames.contains('project-meta')) {
+        db.createObjectStore('project-meta', { keyPath: 'id' });
+      }
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -25,8 +28,10 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
+type StoreName = 'projects' | 'project-meta' | 'assets';
+
 function tx<T>(
-  store: 'projects' | 'assets',
+  store: StoreName,
   mode: IDBTransactionMode,
   run: (s: IDBObjectStore) => IDBRequest<T>
 ): Promise<T> {
@@ -57,6 +62,20 @@ export function deleteProject(id: string): Promise<undefined> {
 
 export function listProjects(): Promise<ProjectRecord[]> {
   return tx('projects', 'readonly', (s) => s.getAll());
+}
+
+// ---------- Project meta (лёгкий список для диалога «Проекты») ----------
+
+export function putProjectMeta(meta: ProjectMeta): Promise<IDBValidKey> {
+  return tx('project-meta', 'readwrite', (s) => s.put(meta));
+}
+
+export function listProjectMeta(): Promise<ProjectMeta[]> {
+  return tx('project-meta', 'readonly', (s) => s.getAll());
+}
+
+export function deleteProjectMeta(id: string): Promise<undefined> {
+  return tx('project-meta', 'readwrite', (s) => s.delete(id));
 }
 
 // ---------- Assets ----------

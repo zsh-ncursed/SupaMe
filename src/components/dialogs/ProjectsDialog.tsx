@@ -1,63 +1,105 @@
 // Диалог управления проектами (список, открытие, переименование, копия, удаление, импорт)
+// Список строится на лёгких ProjectMeta (без загрузки Blob объектов); полный рекорд
+// читается из IndexedDB только для действий: открыть / переименовать / копию.
 import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '../../store/editorStore';
 import { useUi } from '../../store/uiStore';
-import { listProjects, putProject, deleteProject } from '../../db/idb';
+import {
+  listProjectMeta,
+  listProjects,
+  getProject,
+  putProject,
+  putProjectMeta,
+  deleteProject,
+  deleteProjectMeta,
+} from '../../db/idb';
 import { scheduleCollectGarbage } from '../../db/gc';
 import { parseImportFile } from '../../lib/projectIO';
 import { formatDate, uid } from '../../lib/utils';
-import type { ProjectRecord } from '../../types';
+import type { ProjectMeta, ProjectRecord } from '../../types';
+
+const META_FROM_RECORD = (rec: ProjectRecord): ProjectMeta => ({
+  id: rec.id,
+  name: rec.name,
+  updatedAt: rec.updatedAt,
+  width: rec.data.canvas.width,
+  height: rec.data.canvas.height,
+  objectCount: rec.data.objects.length,
+  thumbnail: rec.thumbnail,
+});
 
 export function ProjectsDialog() {
   const open = useUi((s) => s.projectsOpen);
   const close = useUi((s) => s.closeProjects);
   const projectsVersion = useEditor((s) => s.projectsVersion);
   const currentId = useEditor((s) => s.projectId);
-  const [items, setItems] = useState<ProjectRecord[]>([]);
+  const [items, setItems] = useState<ProjectMeta[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const importRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    listProjects()
-      .then((recs) => setItems(recs.sort((a, b) => b.updatedAt - a.updatedAt)))
-      .catch(() => setItems([]));
+    (async () => {
+      try {
+        let metas = await listProjectMeta();
+        if (!metas.length) {
+          // Однократная миграция после обновления хранилища: у старых проектов
+          // ещё нет лёгких мет — достраиваем их из полных записей.
+          const recs = await listProjects();
+          await Promise.all(recs.map((r) => putProjectMeta(META_FROM_RECORD(r))));
+          metas = recs.map(META_FROM_RECORD);
+        }
+        setItems(metas.sort((a, b) => b.updatedAt - a.updatedAt));
+      } catch {
+        setItems([]);
+      }
+    })();
   }, [open, projectsVersion]);
 
   if (!open) return null;
 
   const st = useEditor.getState;
 
-  const openProject = (rec: ProjectRecord) => {
+  const openProject = async (meta: ProjectMeta) => {
+    const rec = await getProject(meta.id);
+    if (!rec) return;
     st().loadProjectRecord(rec);
     close();
   };
 
-  const commitRename = async (rec: ProjectRecord) => {
+  const commitRename = async (meta: ProjectMeta) => {
     const name = editName.trim();
     setEditingId(null);
-    if (!name || name === rec.name) return;
-    await putProject({ ...rec, name, updatedAt: Date.now() });
+    if (!name || name === meta.name) return;
+    const rec = await getProject(meta.id);
+    if (!rec) return;
+    const updated = { ...rec, name, updatedAt: Date.now() };
+    await putProject(updated);
+    await putProjectMeta(META_FROM_RECORD(updated));
     if (rec.id === st().projectId) st().setProjectName(name);
     st().bumpProjectsVersion();
   };
 
-  const duplicate = async (rec: ProjectRecord) => {
+  const duplicate = async (meta: ProjectMeta) => {
+    const rec = await getProject(meta.id);
+    if (!rec) return;
     const copy = JSON.parse(JSON.stringify(rec)) as ProjectRecord;
     copy.id = uid();
-    copy.name = `${rec.name} (копия)`;
+    copy.name = `${meta.name} (копия)`;
     copy.createdAt = Date.now();
     copy.updatedAt = Date.now();
     await putProject(copy);
+    await putProjectMeta(META_FROM_RECORD(copy));
     st().bumpProjectsVersion();
   };
 
-  const remove = async (rec: ProjectRecord) => {
-    if (!window.confirm(`Удалить проект «${rec.name}»? Действие необратимо.`)) return;
-    await deleteProject(rec.id);
+  const remove = async (meta: ProjectMeta) => {
+    if (!window.confirm(`Удалить проект «${meta.name}»? Действие необратимо.`)) return;
+    await deleteProject(meta.id);
+    await deleteProjectMeta(meta.id);
     st().bumpProjectsVersion();
-    st().notify(`Проект «${rec.name}» удалён`);
+    st().notify(`Проект «${meta.name}» удалён`);
     // Ассеты, на которые ссылался только удалённый проект, стали сиротами — почистить
     scheduleCollectGarbage();
   };
@@ -66,6 +108,7 @@ export function ProjectsDialog() {
     try {
       const rec = await parseImportFile(f);
       await putProject(rec);
+      await putProjectMeta(META_FROM_RECORD(rec));
       st().bumpProjectsVersion();
       st().notify(`Проект «${rec.name}» импортирован`, 'success');
     } catch (err) {
@@ -89,43 +132,59 @@ export function ProjectsDialog() {
         </div>
         <div className="modal__body project-list">
           {!items.length && <div className="panel-note">Сохранённых проектов пока нет</div>}
-          {items.map((rec) => (
-            <div key={rec.id} className={`project-card${rec.id === currentId ? ' project-card--current' : ''}`}>
+          {items.map((meta) => (
+            <div
+              key={meta.id}
+              className={`project-card${meta.id === currentId ? ' project-card--current' : ''}`}
+            >
               <div className="project-card__thumb">
-                {rec.thumbnail ? <img src={rec.thumbnail} alt="" /> : <span className="project-card__placeholder" />}
+                {meta.thumbnail ? (
+                  <img src={meta.thumbnail} alt="" />
+                ) : (
+                  <span className="project-card__placeholder" />
+                )}
               </div>
               <div className="project-card__info">
-                {editingId === rec.id ? (
+                {editingId === meta.id ? (
                   <input
                     className="field__input"
                     value={editName}
                     autoFocus
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') void commitRename(rec);
+                      if (e.key === 'Enter') void commitRename(meta);
                       if (e.key === 'Escape') setEditingId(null);
                     }}
                   />
                 ) : (
-                  <div className="project-card__name" title={rec.name}>{rec.name}</div>
+                  <div className="project-card__name" title={meta.name}>
+                    {meta.name}
+                  </div>
                 )}
                 <div className="project-card__meta">
-                  {formatDate(rec.updatedAt)} · {rec.data.canvas.width}×{rec.data.canvas.height} · объектов: {rec.data.objects.length}
+                  {formatDate(meta.updatedAt)} · {meta.width}×{meta.height} · объектов:{' '}
+                  {meta.objectCount}
                 </div>
               </div>
               <div className="project-card__actions">
-                <button className="btn btn--sm btn--primary" onClick={() => openProject(rec)}>Открыть</button>
+                <button className="btn btn--sm btn--primary" onClick={() => void openProject(meta)}>
+                  Открыть
+                </button>
                 <button
                   className="btn btn--sm"
                   onClick={() => {
-                    setEditingId(rec.id);
-                    setEditName(rec.name);
+                    setEditingId(meta.id);
+                    setEditName(meta.name);
                   }}
                 >
                   Переименовать
                 </button>
-                <button className="btn btn--sm" onClick={() => void duplicate(rec)}>Копия</button>
-                <button className="btn btn--sm btn--danger" onClick={() => void remove(rec)}>Удалить</button>
+                <button className="btn btn--sm" onClick={() => void duplicate(meta)}>
+                  Копия
+                </button>
+                <button className="btn btn--sm btn--danger" onClick={() => void remove(meta)}>
+                  Удалить
+                </button>
               </div>
             </div>
           ))}

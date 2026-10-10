@@ -4,9 +4,9 @@
 // раньше и надёжнее в большинстве браузеров.
 import { useEditor } from '../store/editorStore';
 import { AUTOSAVE_DEBOUNCE_MS } from './config';
-import { putProject } from '../db/idb';
+import { putProject, putProjectMeta } from '../db/idb';
 import { renderThumbnail } from './stageCapture';
-import type { ProjectRecord } from '../types';
+import type { ProjectMeta, ProjectRecord } from '../types';
 
 let timer: number | undefined;
 let started = false;
@@ -36,6 +36,16 @@ async function saveNow(): Promise<void> {
       },
     };
     await putProject(record);
+    const meta: ProjectMeta = {
+      id: record.id,
+      name: record.name,
+      updatedAt: record.updatedAt,
+      width: record.data.canvas.width,
+      height: record.data.canvas.height,
+      objectCount: record.data.objects.length,
+      thumbnail: record.thumbnail,
+    };
+    await putProjectMeta(meta);
     const cur = useEditor.getState();
     if (cur.projectId === st.projectId) {
       useEditor.getState().setSaveStatus('saved');
