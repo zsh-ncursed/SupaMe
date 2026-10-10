@@ -3,6 +3,19 @@ import type { ExportedProjectFile, ProjectData, ProjectRecord } from '../types';
 import { getAsset } from '../db/idb';
 import { uid, safeFileName } from './utils';
 
+export const PROJECT_FILE_VERSION = 1; // версия формата *.supame.json
+export const SUPPORTED_DATA_VERSION = 1; // поддерживаемая версия схемы data
+
+/**
+ * Миграция данных проекта с более старой версии схемы на текущую.
+ * Сейчас версий миграции нет — возвращаем данные как есть (место для step-функций).
+ * Более новую версию (fileVersion/dataVersion > SUPPORTED) reject'ит parseImportFile.
+ */
+export function migrateProjectData(data: ProjectData, fromVersion: number): ProjectData {
+  void fromVersion;
+  return data;
+}
+
 export async function buildExportFile(
   meta: Pick<ProjectRecord, 'id' | 'name' | 'createdAt' | 'updatedAt'>,
   data: ProjectData
@@ -34,14 +47,30 @@ export async function buildExportFile(
 
 export async function parseImportFile(file: File): Promise<ProjectRecord> {
   const text = await file.text();
-  const parsed = JSON.parse(text) as ExportedProjectFile;
-  if (!parsed || parsed.app !== 'SupaMe' || !parsed.data) {
+  let parsed: ExportedProjectFile;
+  try {
+    parsed = JSON.parse(text) as ExportedProjectFile;
+  } catch {
+    throw new Error('Файл не является JSON и не похож на проект SupaMe');
+  }
+  if (!parsed || parsed.app !== 'SupaMe') {
     throw new Error('Это не файл проекта SupaMe');
   }
+  const fileVersion = parsed.version ?? 1;
+  const dataVersion = parsed.data?.version ?? 1;
+  if (fileVersion > PROJECT_FILE_VERSION || dataVersion > SUPPORTED_DATA_VERSION) {
+    throw new Error('Файл создан более новой версией SupaMe — обновите приложение');
+  }
+  if (!parsed.data || !parsed.data.canvas || !Array.isArray(parsed.data.objects)) {
+    throw new Error('Повреждённый файл проекта: отсутствуют данные холста/объектов');
+  }
+  const data = migrateProjectData(parsed.data, dataVersion);
+
   const id = uid();
   const now = Date.now();
   // Сохраняем вложенные изображения как ассеты с теми же id (или новыми при конфликте)
   for (const a of parsed.assets ?? []) {
+    if (!a?.dataUrl) continue;
     const blob = await dataUrlToBlob(a.dataUrl);
     const { putAsset, getAsset } = await import('../db/idb');
     let assetId = a.id;
@@ -50,7 +79,7 @@ export async function parseImportFile(file: File): Promise<ProjectRecord> {
       assetId = uid();
     }
     await putAsset({ id: assetId, name: a.name, mime: a.mime, blob, createdAt: now });
-    if (assetId !== a.id) remapAssetId(parsed.data, a.id, assetId);
+    if (assetId !== a.id) remapAssetId(data, a.id, assetId);
   }
   return {
     id,
@@ -58,7 +87,7 @@ export async function parseImportFile(file: File): Promise<ProjectRecord> {
     createdAt: now,
     updatedAt: now,
     thumbnail: null,
-    data: parsed.data,
+    data,
   };
 }
 
