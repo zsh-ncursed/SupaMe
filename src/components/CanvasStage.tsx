@@ -12,6 +12,7 @@ import type { ContextMenuState } from './ContextMenu';
 import { getNode } from './objects/registry';
 import { setStage } from '../lib/stageHolder';
 import { clamp, uid } from '../lib/utils';
+import { snapLineAngle, snapEdge } from '../lib/geometry';
 import { addImageFiles, addTextObject } from '../lib/addObjects';
 import { MIN_FONT_SIZE } from '../types';
 import type { ShapeObject, ShapeVariant } from '../types';
@@ -36,14 +37,7 @@ interface DraftState {
   points: number[];
 }
 
-/** Шаг 45° для инструмента «Линия» с Shift */
-function snapLineAngle(x0: number, y0: number, x1: number, y1: number): [number, number] {
-  const dx = x1 - x0;
-  const dy = y1 - y0;
-  const ang = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
-  const len = Math.hypot(dx, dy);
-  return [x0 + Math.cos(ang) * len, y0 + Math.sin(ang) * len];
-}
+/** Шаг 45° для инструмента «Линия» с Shift — вынесен в src/lib/geometry.ts */
 
 export function CanvasStage({ onPickImages }: Props) {
   const outerRef = useRef<HTMLDivElement | null>(null);
@@ -120,22 +114,7 @@ export function CanvasStage({ onPickImages }: Props) {
   const single = selectedIds.length === 1 ? objects.find((o) => o.id === selectedIds[0]) : null;
 
   // --- Привязка к краям/центру холста с направляющими (ТЗ 5.5.7) ---
-  const snapEdge = (
-    edges: number[],
-    targets: number[],
-    th: number
-  ): { delta: number; guide: number } | null => {
-    let best: { delta: number; guide: number } | null = null;
-    for (const o of edges) {
-      for (const c of targets) {
-        const d = c - o;
-        if (Math.abs(d) <= th && (best === null || Math.abs(d) < Math.abs(best.delta))) {
-          best = { delta: d, guide: c };
-        }
-      }
-    }
-    return best;
-  };
+  // Чистая функция вынесена в src/lib/geometry.ts (покрыта юнит-тестами).
 
   const handleDragStart = () => useEditor.getState().beginTransient();
 

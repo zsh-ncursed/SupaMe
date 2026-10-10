@@ -4,6 +4,7 @@ import type Konva from 'konva';
 import type { BubbleObject } from '../../types';
 import { MIN_FONT_SIZE } from '../../types';
 import { registerNode } from './registry';
+import { boundaryPoint } from '../../lib/geometry';
 import type { TransformEndPayload } from './ImageNode';
 
 export interface BubbleNodeProps {
@@ -105,23 +106,7 @@ function drawBody(ctx: SceneCtx, shape: BubbleObject['shape'], w: number, h: num
   }
 }
 
-/** Точка на границе фигуры вдоль направления (dx, dy) */
-function boundaryPoint(shape: BubbleObject['shape'], w: number, h: number, dx: number, dy: number): { x: number; y: number } {
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  if (shape === 'rect' || shape === 'rounded-rect') {
-    const sx = ux !== 0 ? w / 2 / Math.abs(ux) : Infinity;
-    const sy = uy !== 0 ? h / 2 / Math.abs(uy) : Infinity;
-    const s = Math.min(sx, sy);
-    return { x: ux * s, y: uy * s };
-  }
-  // эллипс-приближение (cloud/shout тоже)
-  const a = w / 2;
-  const b = h / 2;
-  const t = 1 / Math.sqrt((ux / a) ** 2 + (uy / b) ** 2);
-  return { x: ux * t, y: uy * t };
-}
+/** Точка на границе фигуры вдоль направления (dx, dy) — вынесена в src/lib/geometry.ts */
 
 function tailPath(ctx: SceneCtx, obj: BubbleObject) {
   const { tail } = obj;
