@@ -68,12 +68,27 @@ export async function addAsset(blob: Blob, name: string, mime?: string): Promise
 }
 
 export async function removeAsset(id: string): Promise<void> {
+  revokeCacheAsset(id);
+  await deleteAsset(id).catch(() => undefined);
+}
+
+/** Освободить objectURL и убрать ассет из кэша (без удаления из БД) */
+export function revokeCacheAsset(id: string): void {
   const entry = cache.get(id);
   if (entry) {
     URL.revokeObjectURL(entry.url);
     cache.delete(id);
   }
-  await deleteAsset(id).catch(() => undefined);
+  pending.delete(id);
+}
+
+/** Полностью очистить кэш ассетов (смена проекта): revoke всех objectURL */
+export function clearAssetCache(): void {
+  for (const entry of cache.values()) {
+    URL.revokeObjectURL(entry.url);
+  }
+  cache.clear();
+  pending.clear();
 }
 
 /** React-хук: возвращает entry ассета, когда он загружен */

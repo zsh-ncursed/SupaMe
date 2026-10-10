@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '../../store/editorStore';
 import { useUi } from '../../store/uiStore';
 import { listProjects, putProject, deleteProject } from '../../db/idb';
+import { scheduleCollectGarbage } from '../../db/gc';
 import { parseImportFile } from '../../lib/projectIO';
 import { formatDate, uid } from '../../lib/utils';
 import type { ProjectRecord } from '../../types';
@@ -57,6 +58,8 @@ export function ProjectsDialog() {
     await deleteProject(rec.id);
     st().bumpProjectsVersion();
     st().notify(`Проект «${rec.name}» удалён`);
+    // Ассеты, на которые ссылался только удалённый проект, стали сиротами — почистить
+    scheduleCollectGarbage();
   };
 
   const importFile = async (f: File) => {

@@ -77,3 +77,19 @@ export function listAssets(): Promise<AssetRecord[]> {
 export function deleteAsset(id: string): Promise<undefined> {
   return tx('assets', 'readwrite', (s) => s.delete(id));
 }
+
+/** Удалить много ассетов одной транзакцией (для сборщика мусора) */
+export function deleteManyAssets(ids: string[]): Promise<undefined> {
+  if (!ids.length) return Promise.resolve(undefined);
+  return openDb().then(
+    (db) =>
+      new Promise<undefined>((resolve, reject) => {
+        const t = db.transaction('assets', 'readwrite');
+        const store = t.objectStore('assets');
+        for (const id of ids) store.delete(id);
+        t.oncomplete = () => resolve(undefined);
+        t.onerror = () => reject(t.error);
+        t.onabort = () => reject(t.error);
+      })
+  );
+}

@@ -3,6 +3,9 @@ import { create } from 'zustand';
 import type { CanvasState, EditorObject, ProjectRecord } from '../types';
 import { HISTORY_LIMIT, MIN_CANVAS, MAX_CANVAS } from '../types';
 import { uid, clamp } from '../lib/utils';
+import { clearAssetCache } from '../db/assets';
+import { clearNodes } from '../components/objects/registry';
+import { scheduleCollectGarbage } from '../db/gc';
 
 export type SaveStatus = 'saved' | 'dirty' | 'saving';
 export type AlignMode =
@@ -99,6 +102,18 @@ function withHistory(
   };
 }
 
+/** id ассетов текущего (в памяти) состояния — используются как live-set для GC */
+function currentAssetIds(st: EditorState): string[] {
+  const ids: string[] = [];
+  for (const o of st.objects) {
+    if (o.kind === 'image') ids.push(o.assetId);
+  }
+  if (st.canvas.background.type === 'image' && st.canvas.background.assetId) {
+    ids.push(st.canvas.background.assetId);
+  }
+  return ids;
+}
+
 export const useEditor = create<EditorState>()((set, get) => ({
   projectId: null,
   projectName: 'Без названия',
@@ -121,8 +136,10 @@ export const useEditor = create<EditorState>()((set, get) => ({
   clipboard: [],
   projectsVersion: 0,
 
-  newProject: (canvas) =>
-    set(() => ({
+  newProject: (canvas) => {
+    clearAssetCache();
+    clearNodes();
+    return set(() => ({
       projectId: uid(),
       projectName: 'Новый проект',
       createdAt: Date.now(),
@@ -142,10 +159,13 @@ export const useEditor = create<EditorState>()((set, get) => ({
       past: [],
       future: [],
       transientSnapshot: null,
-    })),
+    }));
+  },
 
-  loadProjectRecord: (rec) =>
-    set({
+  loadProjectRecord: (rec) => {
+    clearAssetCache();
+    clearNodes();
+    return set({
       projectId: rec.id,
       projectName: rec.name,
       createdAt: rec.createdAt,
@@ -157,7 +177,8 @@ export const useEditor = create<EditorState>()((set, get) => ({
       future: [],
       transientSnapshot: null,
       saveStatus: 'saved',
-    }),
+    });
+  },
 
   setProjectName: (name) =>
     set({ projectName: name, saveStatus: 'dirty' }),
@@ -236,6 +257,10 @@ export const useEditor = create<EditorState>()((set, get) => ({
         saveStatus: 'dirty',
       })
     );
+    // После удаления объекты могли освободить последние ссылки на ассеты — отложенно почистить сирот.
+    // extraLive защищает ассеты текущего (возможно ещё не сохранённого) проекта.
+    const st = get();
+    scheduleCollectGarbage(currentAssetIds(st), 1500);
   },
 
   duplicateObjects: (ids) => {
