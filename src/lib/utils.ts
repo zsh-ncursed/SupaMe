@@ -21,6 +21,7 @@ export function formatDate(ts: number): string {
 export function safeFileName(name: string, fallback = 'meme'): string {
   const cleaned = name
     .trim()
+    // eslint-disable-next-line no-control-regex -- намеренно вырезаем управляющие символы из имени файла
     .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
     .replace(/\s+/g, '_');
   return cleaned || fallback;

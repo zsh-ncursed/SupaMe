@@ -488,7 +488,3 @@ function objectsExcept(list: EditorObject[], ids: string[]): EditorObject[] {
   const idSet = new Set(ids);
   return list.filter((o) => !idSet.has(o.id));
 }
-
-function selIds(list: { id: string }[]): string[] {
-  return list.map((o) => o.id);
-}

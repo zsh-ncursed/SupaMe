@@ -18,7 +18,6 @@ import { MIN_FONT_SIZE } from '../types';
 import type { ShapeObject, ShapeVariant } from '../types';
 import { ShapeNode } from './objects/ShapeNode';
 import { useUi } from '../store/uiStore';
-import type { ToolId } from '../store/uiStore';
 
 const SNAP_PX = 6; // порог привязки в экранных пикселях
 

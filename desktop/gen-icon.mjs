@@ -10,7 +10,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const SIZE = 64;
 const SS = 4; // суперсэмплинг
-const N = SIZE * SS;
 
 function inRoundRect(x, y, x0, y0, x1, y1, r) {
   if (x < x0 || x > x1 || y < y0 || y > y1) return false;

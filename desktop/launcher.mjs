@@ -1,11 +1,7 @@
 // SupaMe: запуск локального сервиса без трея (headless/CLI-режим).
 // Открывает браузер и держит сервер в foreground (Ctrl+C — выход).
 import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { startServer, probeExisting, openBrowser, stopServer } from './server.mjs';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   const existing = await probeExisting();

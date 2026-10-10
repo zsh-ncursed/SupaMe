@@ -5,8 +5,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, probeExisting, openBrowser, stopServer } from './server.mjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 let server = null;
 let url = null;
 let systray = null;
@@ -27,7 +25,6 @@ async function shutdown() {
 async function main() {
   // ТЗ 5.1.3: если сервис уже работает — переиспользуем
   const existing = await probeExisting();
-  let port = null;
   if (existing) {
     url = existing;
     console.log(`SupaMe уже запущен: ${existing}`);

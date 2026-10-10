@@ -134,6 +134,7 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- ref не узел React; сбрасываем актуальный таймер
       if (arrowTimerRef.current !== undefined) window.clearTimeout(arrowTimerRef.current);
     };
   }, []);

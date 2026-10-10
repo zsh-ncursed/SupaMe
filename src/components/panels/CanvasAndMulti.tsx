@@ -1,7 +1,7 @@
 // Панели «Холст» (ничего не выбрано) и мультивыделение
 import { useRef } from 'react';
 import { useEditor } from '../../store/editorStore';
-import { SectionTitle, NumField, ColorField, CheckField, BtnRow } from '../fields';
+import { SectionTitle, NumField, ColorField, BtnRow } from '../fields';
 import { CANVAS_PRESETS, MIN_CANVAS, MAX_CANVAS } from '../../types';
 import type { EditorObject } from '../../types';
 import { addAsset } from '../../db/assets';
