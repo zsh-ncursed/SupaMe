@@ -61,7 +61,13 @@ export async function getAssetEntry(id: string): Promise<AssetEntry | null> {
 
 export async function addAsset(blob: Blob, name: string, mime?: string): Promise<string> {
   const id = uid();
-  const rec: AssetRecord = { id, name, mime: mime || blob.type || 'image/png', blob, createdAt: Date.now() };
+  const rec: AssetRecord = {
+    id,
+    name,
+    mime: mime || blob.type || 'image/png',
+    blob,
+    createdAt: Date.now(),
+  };
   await putAsset(rec);
   await loadEntry(rec);
   return id;
@@ -93,7 +99,9 @@ export function clearAssetCache(): void {
 
 /** React-хук: возвращает entry ассета, когда он загружен */
 export function useAsset(id: string | undefined): AssetEntry | null {
-  const [entry, setEntry] = useState<AssetEntry | null>(() => (id ? cache.get(id) ?? null : null));
+  const [entry, setEntry] = useState<AssetEntry | null>(() =>
+    id ? (cache.get(id) ?? null) : null
+  );
   useEffect(() => {
     let alive = true;
     if (!id) {

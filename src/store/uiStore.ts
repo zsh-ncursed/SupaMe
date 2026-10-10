@@ -3,13 +3,13 @@ import { create } from 'zustand';
 import { DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR, DEFAULT_STROKE_WIDTH } from '../lib/config';
 
 export type ToolId =
-  | 'select'    // выделение и перемещение
-  | 'pencil'    // карандаш
-  | 'pen'       // перо (сглаженная кривая)
-  | 'line'      // линия
-  | 'rect'      // прямоугольник
-  | 'ellipse'   // овал
-  | 'fill';     // заливка
+  | 'select' // выделение и перемещение
+  | 'pencil' // карандаш
+  | 'pen' // перо (сглаженная кривая)
+  | 'line' // линия
+  | 'rect' // прямоугольник
+  | 'ellipse' // овал
+  | 'fill'; // заливка
 
 export const TOOL_LABELS: Record<ToolId, string> = {
   select: 'Выделение (V)',

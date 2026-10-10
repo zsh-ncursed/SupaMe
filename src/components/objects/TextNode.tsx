@@ -11,7 +11,10 @@ interface NodeProps {
   onDragMove: (id: string, x: number, y: number) => void;
   onDragEnd: (id: string) => void;
   onSelect: (id: string, additive: boolean) => void;
-  onTransformEnd: (id: string, node: { scaleX: number; scaleY: number; x: number; y: number; rotation: number }) => void;
+  onTransformEnd: (
+    id: string,
+    node: { scaleX: number; scaleY: number; x: number; y: number; rotation: number }
+  ) => void;
   onContextMenu: (id: string, clientX: number, clientY: number) => void;
 }
 
@@ -21,7 +24,16 @@ function applyTransform(value: string, mode: TextObject['textTransform']): strin
   return value;
 }
 
-export function TextNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, onSelect, onTransformEnd, onContextMenu }: NodeProps) {
+export function TextNode({
+  obj,
+  draggable,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+  onSelect,
+  onTransformEnd,
+  onContextMenu,
+}: NodeProps) {
   const [measuredH, setMeasuredH] = useState(obj.fontSize);
   const [ref, setRef] = useState<Konva.Text | null>(null);
 
@@ -78,7 +90,9 @@ export function TextNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, o
         e.evt.preventDefault();
         onContextMenu(obj.id, e.evt.clientX, e.evt.clientY);
       }}
-      onTap={(e) => onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))}
+      onTap={(e) =>
+        onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))
+      }
       onTransformEnd={(e) =>
         onTransformEnd(obj.id, {
           scaleX: e.target.scaleX(),

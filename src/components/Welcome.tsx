@@ -17,7 +17,10 @@ export function Welcome() {
           <li>Экспортируйте мем в PNG, JPEG или WebP</li>
         </ul>
         <div className="welcome__actions">
-          <button className="btn btn--primary btn--lg" onClick={() => useEditor.getState().newProject()}>
+          <button
+            className="btn btn--primary btn--lg"
+            onClick={() => useEditor.getState().newProject()}
+          >
             Создать проект
           </button>
           <button className="btn btn--lg" onClick={openProjects}>

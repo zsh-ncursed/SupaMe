@@ -25,7 +25,16 @@ interface NodeProps {
   onContextMenu: (id: string, clientX: number, clientY: number) => void;
 }
 
-export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, onSelect, onTransformEnd, onContextMenu }: NodeProps) {
+export function ImageNode({
+  obj,
+  draggable,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+  onSelect,
+  onTransformEnd,
+  onContextMenu,
+}: NodeProps) {
   const entry = useAsset(obj.assetId);
   const nodeRef = useRef<Konva.Image | null>(null);
 
@@ -44,7 +53,19 @@ export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, 
       node.clearCache();
     }
     node.getLayer()?.batchDraw();
-  }, [active, entry, obj.width, obj.height, obj.crop, f.brightness, f.contrast, f.saturation, f.blur, f.grayscale, f.sepia]);
+  }, [
+    active,
+    entry,
+    obj.width,
+    obj.height,
+    obj.crop,
+    f.brightness,
+    f.contrast,
+    f.saturation,
+    f.blur,
+    f.grayscale,
+    f.sepia,
+  ]);
 
   const crop = obj.crop
     ? { x: obj.crop.x, y: obj.crop.y, width: obj.crop.width, height: obj.crop.height }
@@ -83,7 +104,9 @@ export function ImageNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, 
         e.evt.preventDefault();
         onContextMenu(obj.id, e.evt.clientX, e.evt.clientY);
       }}
-      onTap={(e) => onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))}
+      onTap={(e) =>
+        onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))
+      }
       onTransformEnd={(e) =>
         onTransformEnd(obj.id, {
           scaleX: e.target.scaleX(),

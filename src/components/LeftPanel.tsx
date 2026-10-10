@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditor } from '../store/editorStore';
-import { addImageFiles, addTextObject, addCaption, addBubbleObject, bubblePresetLabel, addAssetObject } from '../lib/addObjects';
+import {
+  addImageFiles,
+  addTextObject,
+  addCaption,
+  addBubbleObject,
+  bubblePresetLabel,
+  addAssetObject,
+} from '../lib/addObjects';
 import { TEMPLATES, applyTemplate } from '../lib/templates';
 import { listAssets } from '../db/idb';
 import { useAsset } from '../db/assets';
@@ -27,20 +34,44 @@ export function LeftPanel() {
       <PaintToolbar />
       <div className="leftpanel__body">
         <nav className="tabs">
-          <button className={`tabs__tab${tab === 'images' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('images')} title="Фото">
+          <button
+            className={`tabs__tab${tab === 'images' ? ' tabs__tab--active' : ''}`}
+            onClick={() => setTab('images')}
+            title="Фото"
+          >
             🖼️
           </button>
-          <button className={`tabs__tab${tab === 'text' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('text')} title="Текст">
+          <button
+            className={`tabs__tab${tab === 'text' ? ' tabs__tab--active' : ''}`}
+            onClick={() => setTab('text')}
+            title="Текст"
+          >
             ✍️
           </button>
-          <button className={`tabs__tab${tab === 'bubbles' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('bubbles')} title="Бабблы">
+          <button
+            className={`tabs__tab${tab === 'bubbles' ? ' tabs__tab--active' : ''}`}
+            onClick={() => setTab('bubbles')}
+            title="Бабблы"
+          >
             💬
           </button>
-          <button className={`tabs__tab${tab === 'templates' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('templates')} title="Шаблоны">
+          <button
+            className={`tabs__tab${tab === 'templates' ? ' tabs__tab--active' : ''}`}
+            onClick={() => setTab('templates')}
+            title="Шаблоны"
+          >
             🧩
           </button>
-          <button className={`tabs__tab${tab === 'layers' ? ' tabs__tab--active' : ''}`} onClick={() => setTab('layers')} title="Слои">
-            <span className="icon-layers"><span /><span /><span /></span>
+          <button
+            className={`tabs__tab${tab === 'layers' ? ' tabs__tab--active' : ''}`}
+            onClick={() => setTab('layers')}
+            title="Слои"
+          >
+            <span className="icon-layers">
+              <span />
+              <span />
+              <span />
+            </span>
           </button>
         </nav>
 
@@ -87,7 +118,9 @@ function ImagesTab() {
           <AssetThumb key={a.id} id={a.id} />
         ))}
       </div>
-      {!assetList.length && <div className="panel-note">Загруженные изображения появятся здесь</div>}
+      {!assetList.length && (
+        <div className="panel-note">Загруженные изображения появятся здесь</div>
+      )}
     </div>
   );
 }
@@ -118,7 +151,9 @@ function TextTab() {
       <button className="btn btn--block" onClick={() => addCaption('bottom')}>
         Подпись снизу
       </button>
-      <div className="panel-note">Подписи: жирный шрифт, белый текст с чёрной обводкой, по центру</div>
+      <div className="panel-note">
+        Подписи: жирный шрифт, белый текст с чёрной обводкой, по центру
+      </div>
     </div>
   );
 }
@@ -131,7 +166,9 @@ function BubblesTab() {
           {bubblePresetLabel(shape)}
         </button>
       ))}
-      <div className="panel-note">Хвостик баббла можно тянуть за синюю ручку (у выделенного баббла)</div>
+      <div className="panel-note">
+        Хвостик баббла можно тянуть за синюю ручку (у выделенного баббла)
+      </div>
     </div>
   );
 }
@@ -174,8 +211,8 @@ function TemplatesTab() {
         ))}
       </div>
       <div className="panel-note">
-        Шаблон создаёт новый проект с заглушками — замените их своим изображением и текстом. Текущий проект
-        останется в списке проектов.
+        Шаблон создаёт новый проект с заглушками — замените их своим изображением и текстом. Текущий
+        проект останется в списке проектов.
       </div>
     </div>
   );
@@ -265,7 +302,11 @@ function LayerRow({ obj }: { obj: EditorObject }) {
       >
         ⧉
       </button>
-      <button className="layer-row__btn" title="Удалить" onClick={() => st().deleteObjects([obj.id])}>
+      <button
+        className="layer-row__btn"
+        title="Удалить"
+        onClick={() => st().deleteObjects([obj.id])}
+      >
         ✕
       </button>
     </div>

@@ -16,22 +16,46 @@ interface NodeProps {
 
 /** У фигур с точками масштабирование применяется к точкам, а не к width/height */
 export function isPointsBasedShape(obj: ShapeObject): boolean {
-  return obj.shape === 'line' || obj.shape === 'pencil' || obj.shape === 'pen' || obj.shape === 'triangle';
+  return (
+    obj.shape === 'line' ||
+    obj.shape === 'pencil' ||
+    obj.shape === 'pen' ||
+    obj.shape === 'triangle'
+  );
 }
 
-export function ShapeNode({ obj, draggable, onDragStart, onDragMove, onDragEnd, onSelect, onTransformEnd, onContextMenu }: NodeProps) {
+export function ShapeNode({
+  obj,
+  draggable,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+  onSelect,
+  onTransformEnd,
+  onContextMenu,
+}: NodeProps) {
   const handlers = {
     draggable: draggable && !obj.locked,
     onDragStart: () => onDragStart(obj.id),
-    onDragMove: (e: { target: { x: () => number; y: () => number } }) => onDragMove(obj.id, e.target.x(), e.target.y()),
+    onDragMove: (e: { target: { x: () => number; y: () => number } }) =>
+      onDragMove(obj.id, e.target.x(), e.target.y()),
     onDragEnd: () => onDragEnd(obj.id),
     onMouseDown: (e: { evt: MouseEvent }) => onSelect(obj.id, e.evt.shiftKey),
     onContextMenu: (e: { evt: MouseEvent }) => {
       e.evt.preventDefault();
       onContextMenu(obj.id, e.evt.clientX, e.evt.clientY);
     },
-    onTap: (e: { evt: unknown }) => onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey)),
-    onTransformEnd: (e: { target: { scaleX: () => number; scaleY: () => number; x: () => number; y: () => number; rotation: () => number } }) =>
+    onTap: (e: { evt: unknown }) =>
+      onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey)),
+    onTransformEnd: (e: {
+      target: {
+        scaleX: () => number;
+        scaleY: () => number;
+        x: () => number;
+        y: () => number;
+        rotation: () => number;
+      };
+    }) =>
       onTransformEnd(obj.id, {
         scaleX: e.target.scaleX(),
         scaleY: e.target.scaleY(),

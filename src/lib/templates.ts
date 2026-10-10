@@ -10,7 +10,11 @@ import type { BubbleObject, CanvasState, EditorObject, ImageObject, TextObject }
 
 /** Блок мини-превью в процентах от квадрата карточки */
 export interface TemplateBlock {
-  x: number; y: number; w: number; h: number; color: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  color: string;
 }
 
 export interface TemplateDef {
@@ -35,7 +39,10 @@ function tplImage(assetId: string, x: number, y: number, w: number, h: number): 
     id: uid(),
     kind: 'image',
     assetId,
-    x, y, width: w, height: h,
+    x,
+    y,
+    width: w,
+    height: h,
     rotation: 0,
     opacity: 1,
     locked: false,
@@ -48,9 +55,16 @@ function tplImage(assetId: string, x: number, y: number, w: number, h: number): 
 }
 
 type TextOpts = {
-  x: number; y: number; text: string;
-  fontSize?: number; color?: string; strokeColor?: string; strokeWidth?: number;
-  boxWidth?: number; fontFamily?: string; stroke?: boolean;
+  x: number;
+  y: number;
+  text: string;
+  fontSize?: number;
+  color?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  boxWidth?: number;
+  fontFamily?: string;
+  stroke?: boolean;
 };
 
 function tplText(o: TextOpts): TextObject {
@@ -86,7 +100,10 @@ function tplText(o: TextOpts): TextObject {
 }
 
 type BubbleOpts = {
-  x: number; y: number; w: number; h: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
   value: string;
   fill?: string;
   strokeColor?: string;
@@ -171,7 +188,9 @@ async function ensurePlaceholder(): Promise<string> {
   ctx.textBaseline = 'middle';
   ctx.fillText('Замените изображение', PH_W / 2, PH_H / 2);
 
-  const blob = await new Promise<Blob | null>((resolve) => cv.toBlob((b) => resolve(b), 'image/png'));
+  const blob = await new Promise<Blob | null>((resolve) =>
+    cv.toBlob((b) => resolve(b), 'image/png')
+  );
   if (!blob) throw new Error('Не удалось создать заглушку');
   const id = await addAsset(blob, 'Заглушка шаблона', 'image/png');
   emit('assets-changed');
@@ -218,7 +237,10 @@ export const TEMPLATES: TemplateDef[] = [
     build: (photo) => [
       tplImage(photo, 540, 600, 940, 760),
       tplBubble({
-        x: 540, y: 200, w: 640, h: 280,
+        x: 540,
+        y: 200,
+        w: 640,
+        h: 280,
         value: 'Ваша реплика',
         tail: { tipX: -180, tipY: 260 },
       }),
@@ -240,12 +262,18 @@ export const TEMPLATES: TemplateDef[] = [
     build: (photo) => [
       tplImage(photo, 540, 540, 1000, 800),
       tplBubble({
-        x: 320, y: 230, w: 420, h: 190,
+        x: 320,
+        y: 230,
+        w: 420,
+        h: 190,
         value: 'Привет!',
         tail: { tipX: -260, tipY: 160 },
       }),
       tplBubble({
-        x: 770, y: 860, w: 420, h: 200,
+        x: 770,
+        y: 860,
+        w: 420,
+        h: 200,
         value: 'И тебе привет!',
         tail: { tipX: 260, tipY: -150 },
       }),
@@ -294,7 +322,10 @@ export const TEMPLATES: TemplateDef[] = [
       tplImage(photo, 255, 290, 470, 520),
       tplImage(photo, 255, 790, 470, 520),
       tplBubble({
-        x: 800, y: 290, w: 500, h: 520,
+        x: 800,
+        y: 290,
+        w: 500,
+        h: 520,
         value: '✕',
         fill: '#e53935',
         strokeColor: 'none',
@@ -304,7 +335,10 @@ export const TEMPLATES: TemplateDef[] = [
         color: '#FFFFFF',
       }),
       tplBubble({
-        x: 800, y: 790, w: 500, h: 520,
+        x: 800,
+        y: 790,
+        w: 500,
+        h: 520,
         value: '✓',
         fill: '#43a047',
         strokeColor: 'none',

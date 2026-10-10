@@ -9,9 +9,7 @@ import { clearNodes } from '../components/objects/registry';
 import { scheduleCollectGarbage } from '../db/gc';
 
 export type SaveStatus = 'saved' | 'dirty' | 'saving';
-export type AlignMode =
-  | 'left' | 'hcenter' | 'right'
-  | 'top' | 'vcenter' | 'bottom';
+export type AlignMode = 'left' | 'hcenter' | 'right' | 'top' | 'vcenter' | 'bottom';
 
 export interface Toast {
   id: string;
@@ -58,7 +56,11 @@ interface EditorState {
   addObject: (obj: EditorObject) => void;
   addObjects: (objs: EditorObject[]) => void;
   updateObject: (id: string, patch: Partial<EditorObject>, opts?: { history?: boolean }) => void;
-  updateObjects: (ids: string[], patch: Partial<EditorObject>, opts?: { history?: boolean }) => void;
+  updateObjects: (
+    ids: string[],
+    patch: Partial<EditorObject>,
+    opts?: { history?: boolean }
+  ) => void;
   replaceObject: (next: EditorObject, opts?: { history?: boolean }) => void;
   deleteObjects: (ids: string[]) => void;
   duplicateObjects: (ids: string[]) => void;
@@ -100,10 +102,7 @@ function snap(canvas: CanvasState, objects: EditorObject[]): string {
 }
 
 /** Подготовить запись в историю: снапшот текущего состояния в past, сброс future */
-function withHistory(
-  s: EditorState,
-  next: Partial<EditorState>
-): Partial<EditorState> {
+function withHistory(s: EditorState, next: Partial<EditorState>): Partial<EditorState> {
   const cur = snap(s.canvas, s.objects);
   return {
     past: [...s.past, cur].slice(-HISTORY_LIMIT),
@@ -190,8 +189,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
     });
   },
 
-  setProjectName: (name) =>
-    set({ projectName: name, saveStatus: 'dirty' }),
+  setProjectName: (name) => set({ projectName: name, saveStatus: 'dirty' }),
 
   setCanvasSize: (width, height) => {
     const w = clamp(Math.round(width), MIN_CANVAS, MAX_CANVAS);
@@ -237,9 +235,7 @@ export const useEditor = create<EditorState>()((set, get) => ({
     set((s) => ({
       ...(opts?.history === false ? {} : withHistory(s, {})),
       saveStatus: 'dirty' as SaveStatus,
-      objects: s.objects.map((o) =>
-        o.id === id ? ({ ...o, ...patch } as EditorObject) : o
-      ),
+      objects: s.objects.map((o) => (o.id === id ? ({ ...o, ...patch } as EditorObject) : o)),
     })),
 
   updateObjects: (ids, patch, opts) =>
@@ -410,12 +406,24 @@ export const useEditor = create<EditorState>()((set, get) => ({
       if (!selIdsHas(sel, o.id)) return o;
       let { x, y } = o;
       switch (mode) {
-        case 'left': x = o.width / 2; break;
-        case 'hcenter': x = width / 2; break;
-        case 'right': x = width - o.width / 2; break;
-        case 'top': y = o.height / 2; break;
-        case 'vcenter': y = height / 2; break;
-        case 'bottom': y = height - o.height / 2; break;
+        case 'left':
+          x = o.width / 2;
+          break;
+        case 'hcenter':
+          x = width / 2;
+          break;
+        case 'right':
+          x = width - o.width / 2;
+          break;
+        case 'top':
+          y = o.height / 2;
+          break;
+        case 'vcenter':
+          y = height / 2;
+          break;
+        case 'bottom':
+          y = height - o.height / 2;
+          break;
       }
       return { ...o, x, y };
     });

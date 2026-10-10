@@ -38,7 +38,14 @@ describe('normalizeFilters', () => {
   });
 
   it('passes the current model through unchanged', () => {
-    const curr = { brightness: 120, contrast: -30, saturation: 50, blur: 4, grayscale: true, sepia: false };
+    const curr = {
+      brightness: 120,
+      contrast: -30,
+      saturation: 50,
+      blur: 4,
+      grayscale: true,
+      sepia: false,
+    };
     expect(normalizeFilters(curr)).toEqual(curr);
   });
 });
@@ -49,7 +56,14 @@ describe('filterPipeline', () => {
   });
 
   it('preserves a documented order for all filters combined', () => {
-    const all = { brightness: 120, contrast: 10, saturation: 80, blur: 3, grayscale: true, sepia: true };
+    const all = {
+      brightness: 120,
+      contrast: 10,
+      saturation: 80,
+      blur: 3,
+      grayscale: true,
+      sepia: true,
+    };
     const pipe = filterPipeline(all);
     expect(pipe).toEqual([
       Konva.Filters.Grayscale,
@@ -69,7 +83,14 @@ describe('filterPipeline', () => {
 
 describe('filterAttrs', () => {
   it('maps model values to Konva attribute space', () => {
-    const a = filterAttrs({ brightness: 150, contrast: -50, saturation: 50, blur: 5, grayscale: false, sepia: false });
+    const a = filterAttrs({
+      brightness: 150,
+      contrast: -50,
+      saturation: 50,
+      blur: 5,
+      grayscale: false,
+      sepia: false,
+    });
     expect(a).toEqual({ brightness: 0.5, contrast: -50, saturation: 0.5, blurRadius: 5 });
   });
 });

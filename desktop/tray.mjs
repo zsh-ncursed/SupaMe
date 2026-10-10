@@ -71,8 +71,20 @@ async function main() {
         title: 'SupaMe',
         tooltip: `SupaMe — ${url}`,
         items: [
-          { id: 'open', title: 'Открыть', tooltip: 'Открыть редактор в браузере', checked: false, enabled: true },
-          { id: 'quit', title: 'Выход', tooltip: 'Остановить и выйти', checked: false, enabled: true },
+          {
+            id: 'open',
+            title: 'Открыть',
+            tooltip: 'Открыть редактор в браузере',
+            checked: false,
+            enabled: true,
+          },
+          {
+            id: 'quit',
+            title: 'Выход',
+            tooltip: 'Остановить и выйти',
+            checked: false,
+            enabled: true,
+          },
         ],
       },
       debug: false,

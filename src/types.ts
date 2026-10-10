@@ -89,12 +89,7 @@ export interface TextObject extends BaseObject {
   autoFit: boolean;
 }
 
-export type BubbleShape =
-  | 'rounded-rect'
-  | 'ellipse'
-  | 'cloud'
-  | 'shout'
-  | 'rect';
+export type BubbleShape = 'rounded-rect' | 'ellipse' | 'cloud' | 'shout' | 'rect';
 
 export interface BubbleTail {
   enabled: boolean;
@@ -132,12 +127,12 @@ export interface BubbleObject extends BaseObject {
 
 /** Геометрические примитивы и штрихи (инструменты Paint) */
 export type ShapeVariant =
-  | 'rect'      // прямоугольник
-  | 'ellipse'   // овал
-  | 'triangle'  // треугольник
-  | 'line'      // прямая линия
-  | 'pencil'    // карандаш: ломаная линия
-  | 'pen';      // перо: сглаженная кривая
+  | 'rect' // прямоугольник
+  | 'ellipse' // овал
+  | 'triangle' // треугольник
+  | 'line' // прямая линия
+  | 'pencil' // карандаш: ломаная линия
+  | 'pen'; // перо: сглаженная кривая
 
 export interface ShapeObject extends BaseObject {
   kind: 'shape';

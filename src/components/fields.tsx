@@ -55,7 +55,9 @@ export function SliderField(props: {
         value={props.value}
         onChange={(e) => props.onChange(parseFloat(e.target.value))}
       />
-      <span className="field__value">{props.display ? props.display(props.value) : props.value}</span>
+      <span className="field__value">
+        {props.display ? props.display(props.value) : props.value}
+      </span>
     </label>
   );
 }
@@ -75,10 +77,18 @@ export function ColorField(props: { label: string; value: string; onChange: (v: 
   );
 }
 
-export function CheckField(props: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function CheckField(props: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <label className="field field--check">
-      <input type="checkbox" checked={props.checked} onChange={(e) => props.onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        checked={props.checked}
+        onChange={(e) => props.onChange(e.target.checked)}
+      />
       <span className="field__label">{props.label}</span>
     </label>
   );
@@ -108,7 +118,12 @@ export function SelectField<T extends string>(props: {
   );
 }
 
-export function TextAreaField(props: { label: string; value: string; rows?: number; onChange: (v: string) => void }) {
+export function TextAreaField(props: {
+  label: string;
+  value: string;
+  rows?: number;
+  onChange: (v: string) => void;
+}) {
   return (
     <label className="field field--area">
       <span className="field__label">{props.label}</span>

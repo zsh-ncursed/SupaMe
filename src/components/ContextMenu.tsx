@@ -41,8 +41,7 @@ export function ContextMenu({ menu, onClose }: Props) {
   const st = useEditor.getState;
   const selected = st().selectedIds;
   // если кликнули по невыделенному объекту — работаем с ним одним
-  const ids =
-    menu.targetId && !selected.includes(menu.targetId) ? [menu.targetId] : selected;
+  const ids = menu.targetId && !selected.includes(menu.targetId) ? [menu.targetId] : selected;
   const obj = menu.targetId ? st().objects.find((o) => o.id === menu.targetId) : null;
 
   const run = (fn: () => void) => {
@@ -51,11 +50,7 @@ export function ContextMenu({ menu, onClose }: Props) {
   };
 
   const item = (label: string, enabled: boolean, fn: () => void) => (
-    <button
-      className="ctx-item"
-      disabled={!enabled}
-      onClick={() => run(fn)}
-    >
+    <button className="ctx-item" disabled={!enabled} onClick={() => run(fn)}>
       {label}
     </button>
   );
@@ -72,16 +67,12 @@ export function ContextMenu({ menu, onClose }: Props) {
       {item('На задний план', ids.length > 0, () => st().moveLayer(ids, 'back'))}
       {(obj || ids.length > 0) && <div className="ctx-sep" />}
       {obj &&
-        item(
-          obj.locked ? 'Разблокировать' : 'Заблокировать',
-          true,
-          () => st().updateObject(obj.id, { locked: !obj.locked })
+        item(obj.locked ? 'Разблокировать' : 'Заблокировать', true, () =>
+          st().updateObject(obj.id, { locked: !obj.locked })
         )}
       {obj &&
-        item(
-          obj.visible ? 'Скрыть' : 'Показать',
-          true,
-          () => st().updateObject(obj.id, { visible: !obj.visible })
+        item(obj.visible ? 'Скрыть' : 'Показать', true, () =>
+          st().updateObject(obj.id, { visible: !obj.visible })
         )}
       <div className="ctx-sep" />
       {item('Удалить', ids.length > 0, () => st().deleteObjects(ids))}

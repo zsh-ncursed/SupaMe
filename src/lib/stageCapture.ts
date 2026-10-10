@@ -123,11 +123,12 @@ export async function renderThumbnail(): Promise<string | null> {
   await nextFrames(3);
   try {
     const scale = Math.min(1, 480 / st.canvas.width);
-    return await renderOffscreen(
-      st.canvas,
-      st.objects,
-      { format: 'png', scale, quality: 1, transparent: st.canvas.background.transparent }
-    );
+    return await renderOffscreen(st.canvas, st.objects, {
+      format: 'png',
+      scale,
+      quality: 1,
+      transparent: st.canvas.background.transparent,
+    });
   } finally {
     st.setExporting(false);
   }

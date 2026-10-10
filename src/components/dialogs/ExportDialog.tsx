@@ -56,12 +56,18 @@ export function ExportDialog() {
       <div className="modal modal--narrow">
         <div className="modal__header">
           <h2>Экспорт изображения</h2>
-          <button className="btn btn--icon" onClick={close}>✕</button>
+          <button className="btn btn--icon" onClick={close}>
+            ✕
+          </button>
         </div>
         <div className="modal__body">
           <label className="field">
             <span className="field__label">Формат</span>
-            <select className="field__input" value={format} onChange={(e) => setFormat(e.target.value as Fmt)}>
+            <select
+              className="field__input"
+              value={format}
+              onChange={(e) => setFormat(e.target.value as Fmt)}
+            >
               <option value="png">PNG</option>
               <option value="jpeg">JPEG</option>
               <option value="webp">WebP</option>
@@ -69,7 +75,11 @@ export function ExportDialog() {
           </label>
           <label className="field">
             <span className="field__label">Масштаб</span>
-            <select className="field__input" value={scale} onChange={(e) => setScale(parseFloat(e.target.value))}>
+            <select
+              className="field__input"
+              value={scale}
+              onChange={(e) => setScale(parseFloat(e.target.value))}
+            >
               <option value={1}>1×</option>
               <option value={2}>2×</option>
               <option value={3}>3×</option>
@@ -78,26 +88,42 @@ export function ExportDialog() {
           {format !== 'png' && (
             <label className="field field--slider">
               <span className="field__label">Качество</span>
-              <input type="range" min={30} max={100} value={quality} onChange={(e) => setQuality(parseInt(e.target.value, 10))} />
+              <input
+                type="range"
+                min={30}
+                max={100}
+                value={quality}
+                onChange={(e) => setQuality(parseInt(e.target.value, 10))}
+              />
               <span className="field__value">{quality}%</span>
             </label>
           )}
           {format !== 'jpeg' && (
             <label className="field field--check">
-              <input type="checkbox" checked={transparent} onChange={(e) => setTransparent(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={transparent}
+                onChange={(e) => setTransparent(e.target.checked)}
+              />
               <span className="field__label">Прозрачный фон</span>
             </label>
           )}
           <label className="field">
             <span className="field__label">Имя файла</span>
-            <input className="field__input" value={name} onChange={(e) => setName(e.target.value)} />
+            <input
+              className="field__input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </label>
           <div className="panel-note">
             Итог: {canvas.width * scale} × {canvas.height * scale} px
           </div>
         </div>
         <div className="modal__actions modal__actions--end">
-          <button className="btn" onClick={close}>Отмена</button>
+          <button className="btn" onClick={close}>
+            Отмена
+          </button>
           <button className="btn btn--primary" disabled={busy} onClick={() => void doExport()}>
             {busy ? 'Экспорт…' : 'Экспорт'}
           </button>

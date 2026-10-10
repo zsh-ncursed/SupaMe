@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { dataUrlToBlob, migrateProjectData, PROJECT_FILE_VERSION, SUPPORTED_DATA_VERSION } from './projectIO';
+import {
+  dataUrlToBlob,
+  migrateProjectData,
+  PROJECT_FILE_VERSION,
+  SUPPORTED_DATA_VERSION,
+} from './projectIO';
 
 describe('project format constants', () => {
   it('declares the supported schema version', () => {

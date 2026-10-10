@@ -13,7 +13,9 @@ import { revokeCacheAsset } from './assets';
 import type { ProjectRecord } from '../types';
 
 /** id ассетов, на которые ссылается проект (объекты + фон) */
-export function assetIdsOfProject(data: Pick<ProjectRecord['data'], 'objects' | 'canvas'>): string[] {
+export function assetIdsOfProject(
+  data: Pick<ProjectRecord['data'], 'objects' | 'canvas'>
+): string[] {
   const ids: string[] = [];
   for (const o of data.objects) {
     if (o.kind === 'image') ids.push(o.assetId);

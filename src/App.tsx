@@ -16,7 +16,12 @@ import { addImageFiles } from './lib/addObjects';
 import { emit } from './lib/bus';
 import { ARROW_REPEAT_DEBOUNCE_MS } from './lib/config';
 
-function moveSelected(dx: number, dy: number, step: number, timerRef: { current: number | undefined }) {
+function moveSelected(
+  dx: number,
+  dy: number,
+  step: number,
+  timerRef: { current: number | undefined }
+) {
   const st = useEditor.getState();
   if (!st.selectedIds.length) return;
   if (timerRef.current === undefined) st.beginTransient();
@@ -53,7 +58,13 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) {
+      if (
+        t &&
+        (t.tagName === 'INPUT' ||
+          t.tagName === 'TEXTAREA' ||
+          t.tagName === 'SELECT' ||
+          t.isContentEditable)
+      ) {
         return;
       }
       const mod = e.ctrlKey || e.metaKey;

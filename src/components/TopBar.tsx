@@ -15,7 +15,11 @@ export function TopBar() {
   const importRef = useRef<HTMLInputElement | null>(null);
 
   const statusText =
-    saveStatus === 'saved' ? 'Сохранено' : saveStatus === 'saving' ? 'Сохранение…' : 'Есть изменения';
+    saveStatus === 'saved'
+      ? 'Сохранено'
+      : saveStatus === 'saving'
+        ? 'Сохранение…'
+        : 'Есть изменения';
 
   const exportProjectFile = async () => {
     const st = useEditor.getState();
@@ -25,7 +29,12 @@ export function TopBar() {
     }
     try {
       const { blob } = await buildExportFile(
-        { id: st.projectId, name: st.projectName, createdAt: st.createdAt, updatedAt: st.updatedAt },
+        {
+          id: st.projectId,
+          name: st.projectName,
+          createdAt: st.createdAt,
+          updatedAt: st.updatedAt,
+        },
         st.canvas && { version: 1, canvas: st.canvas, objects: st.objects }
       );
       downloadBlob(blob, `${safeFileName(translit(st.projectName), 'project')}.supame.json`);
@@ -70,10 +79,20 @@ export function TopBar() {
 
       <div className="topbar__sep" />
 
-      <button className="btn btn--icon" disabled={!canUndo} onClick={() => useEditor.getState().undo()} title="Отменить (Ctrl+Z)">
+      <button
+        className="btn btn--icon"
+        disabled={!canUndo}
+        onClick={() => useEditor.getState().undo()}
+        title="Отменить (Ctrl+Z)"
+      >
         ↶
       </button>
-      <button className="btn btn--icon" disabled={!canRedo} onClick={() => useEditor.getState().redo()} title="Повторить (Ctrl+Shift+Z)">
+      <button
+        className="btn btn--icon"
+        disabled={!canRedo}
+        onClick={() => useEditor.getState().redo()}
+        title="Повторить (Ctrl+Shift+Z)"
+      >
         ↷
       </button>
 
@@ -82,13 +101,25 @@ export function TopBar() {
       <button className="btn" onClick={() => forceSave()} title="Сохранить (Ctrl+S)">
         Сохранить
       </button>
-      <button className="btn btn--primary" onClick={openExport} title="Экспорт изображения (Ctrl+E)">
+      <button
+        className="btn btn--primary"
+        onClick={openExport}
+        title="Экспорт изображения (Ctrl+E)"
+      >
         Экспорт
       </button>
-      <button className="btn" onClick={() => void exportProjectFile()} title="Скачать проект файлом">
+      <button
+        className="btn"
+        onClick={() => void exportProjectFile()}
+        title="Скачать проект файлом"
+      >
         В файл
       </button>
-      <button className="btn" onClick={() => importRef.current?.click()} title="Импорт проекта из файла">
+      <button
+        className="btn"
+        onClick={() => importRef.current?.click()}
+        title="Импорт проекта из файла"
+      >
         Из файла
       </button>
       <input

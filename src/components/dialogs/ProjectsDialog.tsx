@@ -122,13 +122,23 @@ export function ProjectsDialog() {
       <div className="modal">
         <div className="modal__header">
           <h2>Проекты</h2>
-          <button className="btn btn--icon" onClick={close} title="Закрыть">✕</button>
+          <button className="btn btn--icon" onClick={close} title="Закрыть">
+            ✕
+          </button>
         </div>
         <div className="modal__actions">
-          <button className="btn btn--primary" onClick={() => { st().newProject(); close(); }}>
+          <button
+            className="btn btn--primary"
+            onClick={() => {
+              st().newProject();
+              close();
+            }}
+          >
             Новый проект
           </button>
-          <button className="btn" onClick={() => importRef.current?.click()}>Импорт из файла</button>
+          <button className="btn" onClick={() => importRef.current?.click()}>
+            Импорт из файла
+          </button>
         </div>
         <div className="modal__body project-list">
           {!items.length && <div className="panel-note">Сохранённых проектов пока нет</div>}

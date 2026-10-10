@@ -13,10 +13,17 @@ export function StatusBar() {
         Холст: {canvas.width} × {canvas.height}
       </span>
       <span>Масштаб: {Math.round(zoom * 100)}%</span>
-      <span>Объектов: {objects.length}{selectedCount ? ` · выделено: ${selectedCount}` : ''}</span>
+      <span>
+        Объектов: {objects.length}
+        {selectedCount ? ` · выделено: ${selectedCount}` : ''}
+      </span>
       <span className="statusbar__spacer" />
       <span className={`statusbar__save statusbar__save--${saveStatus}`}>
-        {saveStatus === 'saved' ? 'Все изменения сохранены' : saveStatus === 'saving' ? 'Сохранение…' : 'Не сохранено'}
+        {saveStatus === 'saved'
+          ? 'Все изменения сохранены'
+          : saveStatus === 'saving'
+            ? 'Сохранение…'
+            : 'Не сохранено'}
       </span>
       <span className="statusbar__hint">Колесо — масштаб · Del — удалить · Ctrl+Z — отменить</span>
     </footer>

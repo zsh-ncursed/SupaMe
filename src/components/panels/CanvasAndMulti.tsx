@@ -16,7 +16,11 @@ export function CanvasPanel() {
       <SectionTitle>Холст</SectionTitle>
       <div className="preset-grid">
         {CANVAS_PRESETS.map((p) => (
-          <button key={p.label} className="btn btn--block" onClick={() => st().setCanvasSize(p.width, p.height)}>
+          <button
+            key={p.label}
+            className="btn btn--block"
+            onClick={() => st().setCanvasSize(p.width, p.height)}
+          >
             {p.label}
           </button>
         ))}
@@ -104,12 +108,48 @@ export function MultiPanel({ sel }: { sel: EditorObject[] }) {
     <div className="panel-section">
       <SectionTitle>Выделено: {sel.length}</SectionTitle>
       <div className="align-grid">
-        <button className="btn btn--sm" title="По левому краю" onClick={() => st().alignSelected('left')}>⭰</button>
-        <button className="btn btn--sm" title="По центру гориз." onClick={() => st().alignSelected('hcenter')}>⭤</button>
-        <button className="btn btn--sm" title="По правому краю" onClick={() => st().alignSelected('right')}>⭢</button>
-        <button className="btn btn--sm" title="По верхнему краю" onClick={() => st().alignSelected('top')}>⭱</button>
-        <button className="btn btn--sm" title="По центру вертикали" onClick={() => st().alignSelected('vcenter')}>⭥</button>
-        <button className="btn btn--sm" title="По нижнему краю" onClick={() => st().alignSelected('bottom')}>⭣</button>
+        <button
+          className="btn btn--sm"
+          title="По левому краю"
+          onClick={() => st().alignSelected('left')}
+        >
+          ⭰
+        </button>
+        <button
+          className="btn btn--sm"
+          title="По центру гориз."
+          onClick={() => st().alignSelected('hcenter')}
+        >
+          ⭤
+        </button>
+        <button
+          className="btn btn--sm"
+          title="По правому краю"
+          onClick={() => st().alignSelected('right')}
+        >
+          ⭢
+        </button>
+        <button
+          className="btn btn--sm"
+          title="По верхнему краю"
+          onClick={() => st().alignSelected('top')}
+        >
+          ⭱
+        </button>
+        <button
+          className="btn btn--sm"
+          title="По центру вертикали"
+          onClick={() => st().alignSelected('vcenter')}
+        >
+          ⭥
+        </button>
+        <button
+          className="btn btn--sm"
+          title="По нижнему краю"
+          onClick={() => st().alignSelected('bottom')}
+        >
+          ⭣
+        </button>
       </div>
       <div className="field--row">
         <button className="btn btn--sm" onClick={() => st().distributeSelected('h')}>

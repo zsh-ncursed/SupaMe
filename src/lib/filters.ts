@@ -22,7 +22,10 @@ export function normalizeFilters(raw: Partial<ImageFilters> | undefined): ImageF
   return {
     brightness: raw.brightness ?? DEFAULT_FILTERS.brightness,
     // в старой модели контраст 100 означал «норма»
-    contrast: legacy && raw.contrast === 100 ? DEFAULT_FILTERS.contrast : (raw.contrast ?? DEFAULT_FILTERS.contrast),
+    contrast:
+      legacy && raw.contrast === 100
+        ? DEFAULT_FILTERS.contrast
+        : (raw.contrast ?? DEFAULT_FILTERS.contrast),
     saturation: raw.saturation ?? DEFAULT_FILTERS.saturation,
     blur: raw.blur ?? 0,
     grayscale: raw.grayscale ?? false,
@@ -63,8 +66,8 @@ export function filterAttrs(f: ImageFilters): {
 } {
   return {
     brightness: (f.brightness - 100) / 100, // Konva Brighten: -1..1, 0 = норма
-    contrast: f.contrast,                    // Konva Contrast: -100..100, 0 = норма
-    saturation: f.saturation / 100,          // Konva HSL: 1 = норма
-    blurRadius: f.blur,                      // Konva Blur: px
+    contrast: f.contrast, // Konva Contrast: -100..100, 0 = норма
+    saturation: f.saturation / 100, // Konva HSL: 1 = норма
+    blurRadius: f.blur, // Konva Blur: px
   };
 }

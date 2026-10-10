@@ -30,7 +30,16 @@ type SceneCtx = {
   quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
   arc(x: number, y: number, r: number, a0: number, a1: number, ccw?: boolean): void;
   arcTo(x1: number, y1: number, x2: number, y2: number, r: number): void;
-  ellipse(x: number, y: number, rx: number, ry: number, rot: number, a0: number, a1: number, ccw?: boolean): void;
+  ellipse(
+    x: number,
+    y: number,
+    rx: number,
+    ry: number,
+    rot: number,
+    a0: number,
+    a1: number,
+    ccw?: boolean
+  ): void;
   closePath(): void;
   fill(): void;
   stroke(): void;
@@ -98,11 +107,21 @@ function pathShout(ctx: SceneCtx, w: number, h: number) {
 
 function drawBody(ctx: SceneCtx, shape: BubbleObject['shape'], w: number, h: number, r: number) {
   switch (shape) {
-    case 'rounded-rect': pathRoundedRect(ctx, w, h, r); break;
-    case 'rect': pathRoundedRect(ctx, w, h, 0); break;
-    case 'ellipse': pathEllipse(ctx, w, h); break;
-    case 'cloud': pathCloud(ctx, w, h); break;
-    case 'shout': pathShout(ctx, w, h); break;
+    case 'rounded-rect':
+      pathRoundedRect(ctx, w, h, r);
+      break;
+    case 'rect':
+      pathRoundedRect(ctx, w, h, 0);
+      break;
+    case 'ellipse':
+      pathEllipse(ctx, w, h);
+      break;
+    case 'cloud':
+      pathCloud(ctx, w, h);
+      break;
+    case 'shout':
+      pathShout(ctx, w, h);
+      break;
   }
 }
 
@@ -141,7 +160,16 @@ export function BubbleNode(props: BubbleNodeProps) {
 
   useEffect(() => {
     if (textRef.current) setTextH(textRef.current.height());
-  }, [obj.text.value, obj.text.fontSize, obj.text.fontFamily, obj.text.bold, obj.width, obj.height, obj.padding, obj.text.align]);
+  }, [
+    obj.text.value,
+    obj.text.fontSize,
+    obj.text.fontFamily,
+    obj.text.bold,
+    obj.width,
+    obj.height,
+    obj.padding,
+    obj.text.align,
+  ]);
 
   // Автоподбор шрифта: во сколько раз уменьшить, чтобы влез в баббл
   const innerW = Math.max(10, obj.width - obj.padding * 2);
@@ -179,7 +207,9 @@ export function BubbleNode(props: BubbleNodeProps) {
         e.evt.preventDefault();
         props.onContextMenu(obj.id, e.evt.clientX, e.evt.clientY);
       }}
-      onTap={(e) => props.onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))}
+      onTap={(e) =>
+        props.onSelect(obj.id, Boolean((e.evt as unknown as { shiftKey?: boolean }).shiftKey))
+      }
       onTransformEnd={(e) =>
         props.onTransformEnd(obj.id, {
           scaleX: e.target.scaleX(),

@@ -185,7 +185,12 @@ export function CanvasStage({ onPickImages }: Props) {
               onMouseDown={() => useEditor.getState().clearSelection()}
             />
             {canvas.background.type === 'image' && bgEntry && (
-              <KonvaImage image={bgEntry.el} width={canvas.width} height={canvas.height} listening={false} />
+              <KonvaImage
+                image={bgEntry.el}
+                width={canvas.width}
+                height={canvas.height}
+                listening={false}
+              />
             )}
             {objects.map((obj) => {
               if (!obj.visible) return null;
@@ -253,26 +258,28 @@ export function CanvasStage({ onPickImages }: Props) {
                 />
               );
             })}
-            {!exporting && guides.v.map((gx, i) => (
-              <Line
-                key={`guide-v${i}`}
-                points={[gx, 0, gx, canvas.height]}
-                stroke="#42a5f5"
-                strokeWidth={1 / zoom}
-                dash={[6 / zoom, 4 / zoom]}
-                listening={false}
-              />
-            ))}
-            {!exporting && guides.h.map((gy, i) => (
-              <Line
-                key={`guide-h${i}`}
-                points={[0, gy, canvas.width, gy]}
-                stroke="#42a5f5"
-                strokeWidth={1 / zoom}
-                dash={[6 / zoom, 4 / zoom]}
-                listening={false}
-              />
-            ))}
+            {!exporting &&
+              guides.v.map((gx, i) => (
+                <Line
+                  key={`guide-v${i}`}
+                  points={[gx, 0, gx, canvas.height]}
+                  stroke="#42a5f5"
+                  strokeWidth={1 / zoom}
+                  dash={[6 / zoom, 4 / zoom]}
+                  listening={false}
+                />
+              ))}
+            {!exporting &&
+              guides.h.map((gy, i) => (
+                <Line
+                  key={`guide-h${i}`}
+                  points={[0, gy, canvas.width, gy]}
+                  stroke="#42a5f5"
+                  strokeWidth={1 / zoom}
+                  dash={[6 / zoom, 4 / zoom]}
+                  listening={false}
+                />
+              ))}
             <Transformer
               ref={trRef}
               rotateEnabled
@@ -288,7 +295,16 @@ export function CanvasStage({ onPickImages }: Props) {
               enabledAnchors={
                 single?.kind === 'text'
                   ? ['top-left', 'top-right', 'bottom-left', 'bottom-right']
-                  : ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right']
+                  : [
+                      'top-left',
+                      'top-center',
+                      'top-right',
+                      'middle-left',
+                      'middle-right',
+                      'bottom-left',
+                      'bottom-center',
+                      'bottom-right',
+                    ]
               }
               onTransformStart={handleTransformStart}
               boundBoxFunc={(oldBox, newBox) =>
@@ -339,11 +355,31 @@ export function CanvasStage({ onPickImages }: Props) {
 
       {!exporting && (
         <div className="zoom-controls">
-          <button className="zoom-btn" title="Уменьшить (Ctrl+-)" onClick={() => useEditor.getState().setZoom(zoom / 1.2)}>−</button>
+          <button
+            className="zoom-btn"
+            title="Уменьшить (Ctrl+-)"
+            onClick={() => useEditor.getState().setZoom(zoom / 1.2)}
+          >
+            −
+          </button>
           <span className="zoom-label">{Math.round(zoom * 100)}%</span>
-          <button className="zoom-btn" title="Увеличить (Ctrl+=)" onClick={() => useEditor.getState().setZoom(zoom * 1.2)}>+</button>
-          <button className="zoom-btn zoom-btn--wide" title="Масштаб 100% (Ctrl+0)" onClick={() => useEditor.getState().setZoom(1)}>100%</button>
-          <button className="zoom-btn zoom-btn--wide" onClick={zoomFit}>Вписать</button>
+          <button
+            className="zoom-btn"
+            title="Увеличить (Ctrl+=)"
+            onClick={() => useEditor.getState().setZoom(zoom * 1.2)}
+          >
+            +
+          </button>
+          <button
+            className="zoom-btn zoom-btn--wide"
+            title="Масштаб 100% (Ctrl+0)"
+            onClick={() => useEditor.getState().setZoom(1)}
+          >
+            100%
+          </button>
+          <button className="zoom-btn zoom-btn--wide" onClick={zoomFit}>
+            Вписать
+          </button>
         </div>
       )}
 
