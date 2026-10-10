@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { clamp, safeFileName, translit, uid } from './utils';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { clamp, safeFileName, translit, uid, formatDate } from './utils';
 
 describe('clamp', () => {
   it('keeps values inside bounds', () => {
@@ -48,5 +48,25 @@ describe('uid', () => {
     expect(a).not.toBe(b);
     expect(typeof a).toBe('string');
     expect(a.length).toBeGreaterThan(8);
+  });
+
+  it('falls back to a timestamp-based id when crypto.randomUUID is unavailable', () => {
+    vi.stubGlobal('crypto', undefined);
+    try {
+      const id = uid();
+      expect(typeof id).toBe('string');
+      expect(id.length).toBeGreaterThan(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe('formatDate', () => {
+  it('formats a timestamp as a ru-RU date/time string', () => {
+    const ts = new Date(2023, 0, 15, 10, 30).getTime();
+    const out = formatDate(ts);
+    expect(out).toMatch(/\d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}/);
+    expect(out).toContain('2023');
   });
 });
