@@ -107,7 +107,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-function dataUrlToBlob(dataUrl: string): Blob {
+export function dataUrlToBlob(dataUrl: string): Blob {
   const comma = dataUrl.indexOf(',');
   if (comma < 0) {
     throw new Error('Некорректный dataURL в файле проекта');
