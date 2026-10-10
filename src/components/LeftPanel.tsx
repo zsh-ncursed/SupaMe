@@ -5,6 +5,7 @@ import { TEMPLATES, applyTemplate } from '../lib/templates';
 import { listAssets } from '../db/idb';
 import { useAsset } from '../db/assets';
 import { PaintToolbar } from './PaintToolbar';
+import { on } from '../lib/bus';
 import type { BubbleShape, EditorObject } from '../types';
 
 type Tab = 'images' | 'text' | 'bubbles' | 'templates' | 'layers';
@@ -18,8 +19,7 @@ export function LeftPanel() {
   // Пустое состояние на холсте открывает диалог через событие
   useEffect(() => {
     const handler = () => fileRef.current?.click();
-    window.addEventListener('supame:open-file-dialog', handler);
-    return () => window.removeEventListener('supame:open-file-dialog', handler);
+    return on('open-file-dialog', handler);
   }, []);
 
   return (
@@ -77,8 +77,7 @@ function ImagesTab() {
         .catch(() => undefined);
     };
     refresh();
-    window.addEventListener('supame:assets-changed', refresh);
-    return () => window.removeEventListener('supame:assets-changed', refresh);
+    return on('assets-changed', refresh);
   }, []);
 
   return (

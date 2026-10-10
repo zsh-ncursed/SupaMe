@@ -2,6 +2,7 @@
 import { useEditor } from '../store/editorStore';
 import { addAsset, getAssetEntry } from '../db/assets';
 import { uid } from './utils';
+import { emit } from './bus';
 import { CAPTION_FONT, BUBBLE_FONT, DEFAULT_FONT } from './fonts';
 import { DEFAULT_FILTERS } from './filters';
 import type { BubbleShape, ImageObject, TextObject, BubbleObject, EditorObject } from '../types';
@@ -45,7 +46,7 @@ export async function addImageFiles(files: File[]): Promise<void> {
   for (const file of files) {
     try {
       const assetId = await addAsset(file, file.name, file.type);
-      window.dispatchEvent(new Event('supame:assets-changed'));
+      emit('assets-changed');
       const entry = (await import('../db/assets')).peekAsset(assetId);
       let w = entry?.width ?? 512;
       let h = entry?.height ?? 512;

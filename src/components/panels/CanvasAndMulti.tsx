@@ -5,6 +5,7 @@ import { SectionTitle, NumField, ColorField, BtnRow } from '../fields';
 import { CANVAS_PRESETS, MIN_CANVAS, MAX_CANVAS } from '../../types';
 import type { EditorObject } from '../../types';
 import { addAsset } from '../../db/assets';
+import { emit } from '../../lib/bus';
 
 export function CanvasPanel() {
   const canvas = useEditor((s) => s.canvas);
@@ -85,7 +86,7 @@ function BgImageControls() {
           try {
             const assetId = await addAsset(f, f.name, f.type);
             st().setBackground({ type: 'image', assetId, transparent: false });
-            window.dispatchEvent(new Event('supame:assets-changed'));
+            emit('assets-changed');
           } catch {
             st().notify('Не удалось загрузить фон', 'error');
           }

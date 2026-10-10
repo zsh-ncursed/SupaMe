@@ -3,6 +3,7 @@
 import { addAsset, getAssetEntry } from '../db/assets';
 import { useEditor } from '../store/editorStore';
 import { uid } from './utils';
+import { emit } from './bus';
 import { CAPTION_FONT, BUBBLE_FONT } from './fonts';
 import { DEFAULT_FILTERS } from './filters';
 import type { BubbleObject, CanvasState, EditorObject, ImageObject, TextObject } from '../types';
@@ -173,7 +174,7 @@ async function ensurePlaceholder(): Promise<string> {
   const blob = await new Promise<Blob | null>((resolve) => cv.toBlob((b) => resolve(b), 'image/png'));
   if (!blob) throw new Error('Не удалось создать заглушку');
   const id = await addAsset(blob, 'Заглушка шаблона', 'image/png');
-  window.dispatchEvent(new Event('supame:assets-changed'));
+  emit('assets-changed');
   placeholderId = id;
   return id;
 }

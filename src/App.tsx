@@ -13,6 +13,7 @@ import { useUi } from './store/uiStore';
 import type { ToolId } from './store/uiStore';
 import { startAutosave, forceSave } from './lib/autosave';
 import { addImageFiles } from './lib/addObjects';
+import { emit } from './lib/bus';
 import { ARROW_REPEAT_DEBOUNCE_MS } from './lib/config';
 
 function moveSelected(dx: number, dy: number, step: number, timerRef: { current: number | undefined }) {
@@ -163,7 +164,7 @@ export default function App() {
       <div className="app__main">
         <LeftPanel />
         <main className="app__canvas">
-          <CanvasStage key={`stage-${fontsTick}`} onPickImages={() => window.dispatchEvent(new Event('supame:open-file-dialog'))} />
+          <CanvasStage key={`stage-${fontsTick}`} onPickImages={() => emit('open-file-dialog')} />
         </main>
         <aside className="app__right">
           <RightPanel />
