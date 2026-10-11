@@ -182,7 +182,7 @@ function TemplatesTab() {
           <button
             key={t.id}
             className="tpl-card"
-            disabled={busy !== null}
+            disabled={busy}
             onClick={() => {
               setBusy(true);
               void applyTemplate(t)
