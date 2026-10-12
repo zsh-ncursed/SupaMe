@@ -51,6 +51,8 @@ function tplImage(assetId: string, x: number, y: number, w: number, h: number): 
     flipY: false,
     crop: null,
     filters: { ...DEFAULT_FILTERS },
+    // Заглушка-изображение: клик по ней в LeftPanel открывает выбор файла
+    placeholder: true,
   };
 }
 
@@ -193,7 +195,7 @@ async function ensurePlaceholder(): Promise<string> {
   );
   if (!blob) throw new Error('Не удалось создать заглушку');
   const id = await addAsset(blob, 'Заглушка шаблона', 'image/png');
-  emit('assets-changed');
+  emit('assets-changed', undefined);
   placeholderId = id;
   return id;
 }

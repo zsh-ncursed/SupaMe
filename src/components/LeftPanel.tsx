@@ -7,6 +7,7 @@ import {
   addBubbleObject,
   bubblePresetLabel,
   addAssetObject,
+  replacePlaceholderImage,
 } from '../lib/addObjects';
 import { TEMPLATES, applyTemplate } from '../lib/templates';
 import { listAssets } from '../db/idb';
@@ -22,11 +23,22 @@ const BUBBLE_SHAPES: BubbleShape[] = ['rounded-rect', 'ellipse', 'cloud', 'shout
 export function LeftPanel() {
   const [tab, setTab] = useState<Tab>('images');
   const fileRef = useRef<HTMLInputElement | null>(null);
+  // id объекта-заглушки, в который нужно подставить выбранный файл (или null)
+  const placeholderTargetRef = useRef<string | null>(null);
 
-  // Пустое состояние на холсте открывает диалог через событие
+  // Пустое состояние на холсте открывает диалог; клик по заглушке шаблона тоже
   useEffect(() => {
     const handler = () => fileRef.current?.click();
-    return on('open-file-dialog', handler);
+    const pickHandler = (objectId: string) => {
+      placeholderTargetRef.current = objectId;
+      fileRef.current?.click();
+    };
+    const offDialog = on('open-file-dialog', handler);
+    const offPick = on('pick-image-for-placeholder', pickHandler);
+    return () => {
+      offDialog();
+      offPick();
+    };
   }, []);
 
   return (
@@ -89,7 +101,15 @@ export function LeftPanel() {
           style={{ display: 'none' }}
           onChange={(e) => {
             const files = Array.from(e.target.files ?? []);
-            if (files.length) void addImageFiles(files);
+            if (!files.length) return;
+            const target = placeholderTargetRef.current;
+            placeholderTargetRef.current = null;
+            if (target) {
+              // замена заглушки конкретного объекта — берём первый файл
+              void replacePlaceholderImage(target, files[0]);
+            } else {
+              void addImageFiles(files);
+            }
             e.target.value = '';
           }}
         />

@@ -61,6 +61,16 @@ describe('templates metadata', () => {
       expect(objs.some((o) => o.kind === 'image')).toBe(false);
     }
   });
+
+  it('every built image object is marked as a placeholder', () => {
+    for (const t of TEMPLATES) {
+      for (const o of t.build('ph')) {
+        if (o.kind === 'image') {
+          expect(o.placeholder).toBe(true);
+        }
+      }
+    }
+  });
 });
 
 describe('template builds', () => {

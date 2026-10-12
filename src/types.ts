@@ -55,6 +55,8 @@ export interface ImageObject extends BaseObject {
   /** Область обрезки в координатах исходного изображения */
   crop: { x: number; y: number; width: number; height: number } | null;
   filters: ImageFilters;
+  /** Заглушка-изображение шаблона: клик по ней открывает выбор файла для замены */
+  placeholder?: boolean;
 }
 
 export type TextAlign = 'left' | 'center' | 'right';

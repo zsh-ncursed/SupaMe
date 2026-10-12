@@ -90,7 +90,7 @@ function BgImageControls() {
           try {
             const assetId = await addAsset(f, f.name, f.type);
             st().setBackground({ type: 'image', assetId, transparent: false });
-            emit('assets-changed');
+            emit('assets-changed', undefined);
           } catch {
             st().notify('Не удалось загрузить фон', 'error');
           }

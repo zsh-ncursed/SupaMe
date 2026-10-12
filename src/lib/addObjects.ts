@@ -1,11 +1,13 @@
 // Фабрики объектов: изображения из файлов, текст, подписи, бабблы
 import { useEditor } from '../store/editorStore';
-import { addAsset, getAssetEntry } from '../db/assets';
+import { addAsset, getAssetEntry, peekAsset } from '../db/assets';
 import { uid } from './utils';
 import { emit } from './bus';
 import { CAPTION_FONT, BUBBLE_FONT, DEFAULT_FONT } from './fonts';
 import { DEFAULT_FILTERS } from './filters';
 import type { BubbleShape, ImageObject, TextObject, BubbleObject, EditorObject } from '../types';
+import { currentLiveAssetIds } from '../store/editorStore';
+import { scheduleCollectGarbage } from '../db/gc';
 
 /** Добавить на холст объект существующего ассета (из панели «Картинки») */
 export async function addAssetObject(assetId: string): Promise<void> {
@@ -46,7 +48,7 @@ export async function addImageFiles(files: File[]): Promise<void> {
   for (const file of files) {
     try {
       const assetId = await addAsset(file, file.name, file.type);
-      emit('assets-changed');
+      emit('assets-changed', undefined);
       const entry = (await import('../db/assets')).peekAsset(assetId);
       let w = entry?.width ?? 512;
       let h = entry?.height ?? 512;
@@ -194,4 +196,75 @@ export function addBubbleObject(shape: BubbleShape): void {
     },
   };
   useEditor.getState().addObject(obj);
+}
+
+/**
+ * Выбор центрированной обрезки-rectangle, заполняющей рамку (object-fit: cover)
+ * при соотношении сторон изображения `srcW×srcH` и целевой рамки `frameW×frameH`.
+ * Возвращает координаты в пикселях исходного изображения или null, если хотя бы
+ * одна сторона равна нулю (размеры неизвестны — растягиваем без обрезки).
+ */
+function coverCrop(
+  srcW: number,
+  srcH: number,
+  frameW: number,
+  frameH: number
+): { x: number; y: number; width: number; height: number } | null {
+  if (!srcW || !srcH) return null;
+  const frameAspect = frameW / frameH;
+  const imgAspect = srcW / srcH;
+  if (imgAspect > frameAspect) {
+    // изображение шире рамки — обрезаем по горизонтали
+    const cropW = Math.round(srcH * frameAspect);
+    const cropH = srcH;
+    const x = Math.round((srcW - cropW) / 2);
+    return { x, y: 0, width: cropW, height: cropH };
+  }
+  // изображение уже/выше рамки — обрезаем по вертикали
+  const cropH = Math.round(srcW / frameAspect);
+  const cropW = srcW;
+  const y = Math.round((srcH - cropH) / 2);
+  return { x: 0, y, width: cropW, height: cropH };
+}
+
+/**
+ * Заменить заглушку-изображение шаблона (объект с `placeholder: true`) выбранным
+ * файлом: сохраняем его как ассет, пересчитываем обрезку под рамку объекта и
+ * сбрасываем признак заглушки. Позиция/размер/поворот объекта сохраняются.
+ */
+export async function replacePlaceholderImage(objectId: string, file: File): Promise<boolean> {
+  const isImageLike = file.type.startsWith('image') || file.type === 'application/octet-stream';
+  if (!isImageLike) {
+    useEditor.getState().notify('Файл не является изображением', 'error');
+    return false;
+  }
+  const st = useEditor.getState();
+  const obj = st.objects.find((o) => o.id === objectId);
+  if (!obj) return false;
+  if (obj.kind !== 'image') return false;
+
+  let assetId: string;
+  try {
+    assetId = await addAsset(file, file.name, file.type);
+  } catch (err) {
+    useEditor.getState().notify(`Не удалось загрузить ${file.name}`, 'error');
+    console.error(err);
+    return false;
+  }
+  emit('assets-changed', undefined);
+
+  // естественные размеры только что загруженного ассета (из кэша, без повторного чтения)
+  const entry = peekAsset(assetId);
+  const next: ImageObject = {
+    ...obj,
+    assetId,
+    crop: coverCrop(entry?.width ?? 0, entry?.height ?? 0, obj.width, obj.height),
+    filters: { ...DEFAULT_FILTERS },
+    placeholder: false,
+  };
+  useEditor.getState().replaceObject(next, { history: true });
+
+  // старая заглушка могла стать сиротой — чистим, защищая актуальные ассеты проекта
+  scheduleCollectGarbage(currentLiveAssetIds());
+  return true;
 }

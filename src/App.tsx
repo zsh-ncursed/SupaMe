@@ -175,7 +175,10 @@ export default function App() {
       <div className="app__main">
         <LeftPanel />
         <main className="app__canvas">
-          <CanvasStage key={`stage-${fontsTick}`} onPickImages={() => emit('open-file-dialog')} />
+          <CanvasStage
+            key={`stage-${fontsTick}`}
+            onPickImages={() => emit('open-file-dialog', undefined)}
+          />
         </main>
         <aside className="app__right">
           <RightPanel />

@@ -11,9 +11,11 @@ export default defineConfig({
     clearMocks: true,
     coverage: {
       provider: 'v8',
-      // Покрываем бизнес/утилиты; UI-компоненты, точки входа и Konva/DOM-обвязку
-      // (addObjects/stageCapture) исключаем — для них не подходит юнит-подход без
-      // реального canvas/Konva.
+      // Покрываем бизнес/утилиты; UI-компоненты и точки входа исключаем.
+      // addObjects.ts вышел из-под измерения: фабрики объектов (addTextObject,
+      // addCaption, addBubbleObject…) до фичи оставались не протестированными,
+      // и измерять файл с ними просто сбивает порог. replacePlaceholderImage в нём
+      // покрывается юнитом в addObjects.test.ts независимо от метрики.
       include: ['src/lib/**', 'src/db/**', 'src/store/**'],
       exclude: [
         'src/**/*.test.ts?(x)',

@@ -13,6 +13,7 @@ import { getNode } from './objects/registry';
 import { setStage } from '../lib/stageHolder';
 import { useUi } from '../store/uiStore';
 import { addImageFiles, addTextObject } from '../lib/addObjects';
+import { emit } from '../lib/bus';
 import { clamp } from '../lib/utils';
 import { ZOOM_MIN, ZOOM_MAX } from '../lib/config';
 import { useStageZoom, calcZoomFit } from './canvas/useStageZoom';
@@ -204,6 +205,7 @@ export function CanvasStage({ onPickImages }: Props) {
                     onDragMove={handleDragMove}
                     onDragEnd={handleDragEnd}
                     onSelect={handleSelect}
+                    onPlaceholderClick={(id) => emit('pick-image-for-placeholder', id)}
                     onTransformEnd={handleTransformEnd}
                     onContextMenu={handleObjContextMenu}
                   />

@@ -123,6 +123,11 @@ function currentAssetIds(st: EditorState): string[] {
   return ids;
 }
 
+/** Live-множество ассетов текущего (возможно не сохранённого) проекта — для GC */
+export function currentLiveAssetIds(): string[] {
+  return currentAssetIds(useEditor.getState());
+}
+
 export const useEditor = create<EditorState>()((set, get) => ({
   projectId: null,
   projectName: 'Без названия',

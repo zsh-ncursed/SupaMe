@@ -23,6 +23,8 @@ interface NodeProps {
   onSelect: (id: string, additive: boolean) => void;
   onTransformEnd: (id: string, payload: TransformEndPayload) => void;
   onContextMenu: (id: string, clientX: number, clientY: number) => void;
+  /** Клик по заглушке-изображению шаблона (открывает picker в LeftPanel) */
+  onPlaceholderClick?: (id: string) => void;
 }
 
 export function ImageNode({
@@ -34,6 +36,7 @@ export function ImageNode({
   onSelect,
   onTransformEnd,
   onContextMenu,
+  onPlaceholderClick,
 }: NodeProps) {
   const entry = useAsset(obj.assetId);
   const nodeRef = useRef<Konva.Image | null>(null);
@@ -100,6 +103,16 @@ export function ImageNode({
       onDragMove={(e) => onDragMove(obj.id, e.target.x(), e.target.y())}
       onDragEnd={() => onDragEnd(obj.id)}
       onMouseDown={(e) => onSelect(obj.id, e.evt.shiftKey)}
+      onClick={() => {
+        if (obj.placeholder) onPlaceholderClick?.(obj.id);
+      }}
+      onMouseEnter={(e) => {
+        if (obj.placeholder)
+          e.target.getStage()?.container().style.setProperty('cursor', 'pointer');
+      }}
+      onMouseLeave={(e) => {
+        if (obj.placeholder) e.target.getStage()?.container().style.removeProperty('cursor');
+      }}
       onContextMenu={(e) => {
         e.evt.preventDefault();
         onContextMenu(obj.id, e.evt.clientX, e.evt.clientY);
