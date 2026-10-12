@@ -26,9 +26,14 @@ export function LeftPanel() {
   // id объекта-заглушки, в который нужно подставить выбранный файл (или null)
   const placeholderTargetRef = useRef<string | null>(null);
 
-  // Пустое состояние на холсте открывает диалог; клик по заглушке шаблона тоже
+  // Пустое состояние на холсте открывает диалог; клик по заглушке шаблона тоже.
+  // При обычном открытии диалога сбрасываем цель — чтобы stale target не переключил
+  // добавление файлов на «заменить заглушку» после отмены выбора.
   useEffect(() => {
-    const handler = () => fileRef.current?.click();
+    const handler = () => {
+      placeholderTargetRef.current = null;
+      fileRef.current?.click();
+    };
     const pickHandler = (objectId: string) => {
       placeholderTargetRef.current = objectId;
       fileRef.current?.click();
