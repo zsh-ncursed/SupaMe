@@ -305,9 +305,13 @@ body,
   padding: 3px 4px;
   border-radius: 4px;
 }
-.layer-row__btn:hover {
+.layer-row__btn:hover:not(:disabled) {
   color: var(--text);
   background: var(--bg);
+}
+.layer-row__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 /* ---------- холст ---------- */

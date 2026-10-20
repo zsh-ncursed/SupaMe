@@ -84,6 +84,7 @@ function CommonSection({ obj }: { obj: EditorObject }) {
         <button
           className="btn btn--sm"
           title="Поднять слой (Ctrl+])"
+          disabled={obj.locked}
           onClick={() => st().moveLayer([obj.id], 'up')}
         >
           ⬆
@@ -91,6 +92,7 @@ function CommonSection({ obj }: { obj: EditorObject }) {
         <button
           className="btn btn--sm"
           title="Опустить слой (Ctrl+[)"
+          disabled={obj.locked}
           onClick={() => st().moveLayer([obj.id], 'down')}
         >
           ⬇
@@ -98,6 +100,7 @@ function CommonSection({ obj }: { obj: EditorObject }) {
         <button
           className="btn btn--sm"
           title="На передний план"
+          disabled={obj.locked}
           onClick={() => st().moveLayer([obj.id], 'front')}
         >
           ⤒
@@ -105,6 +108,7 @@ function CommonSection({ obj }: { obj: EditorObject }) {
         <button
           className="btn btn--sm"
           title="На задний план"
+          disabled={obj.locked}
           onClick={() => st().moveLayer([obj.id], 'back')}
         >
           ⤓
@@ -120,7 +124,12 @@ function CommonSection({ obj }: { obj: EditorObject }) {
         <button className="btn btn--sm" onClick={() => st().duplicateObjects([obj.id])}>
           ⧉ Копия
         </button>
-        <button className="btn btn--sm" onClick={() => st().deleteObjects([obj.id])}>
+        <button
+          className="btn btn--sm"
+          title={obj.locked ? 'Сначала разблокируйте объект' : 'Удалить'}
+          disabled={obj.locked}
+          onClick={() => st().deleteObjects([obj.id])}
+        >
           ✕ Удалить
         </button>
       </BtnRow>

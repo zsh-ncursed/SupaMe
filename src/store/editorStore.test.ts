@@ -225,6 +225,19 @@ describe('editorStore: objects', () => {
     expect(scheduleGc).not.toHaveBeenCalled();
   });
 
+  it('deleteObjects does not remove locked objects', () => {
+    // Правило блокировки: заблокированный объект защищён от удаления.
+    useEditor.getState().addObjects([obj('o1', { locked: true }), obj('o2')]);
+    useEditor.getState().deleteObjects(['o1']);
+    expect(useEditor.getState().objects.map((o) => o.id)).toEqual(['o1', 'o2']);
+  });
+
+  it('deleteObjects removes unlocked objects and keeps locked ones in a mixed batch', () => {
+    useEditor.getState().addObjects([obj('o1', { locked: true }), obj('o2')]);
+    useEditor.getState().deleteObjects(['o1', 'o2']);
+    expect(useEditor.getState().objects.map((o) => o.id)).toEqual(['o1']);
+  });
+
   it('duplicateObjects clones with a new id, offset and unlocked state', () => {
     useEditor.getState().addObjects([obj('o1', { locked: true, x: 10, y: 20 })]);
     useEditor.getState().duplicateObjects(['o1']);
@@ -401,6 +414,21 @@ describe('editorStore: layers', () => {
     useEditor.getState().moveLayer([], 'front');
     expect(useEditor.getState().objects).toHaveLength(1);
     expect(useEditor.getState().past).toHaveLength(pastLen);
+  });
+
+  it('moveLayer does not reorder locked objects', () => {
+    // Правило блокировки: заблокированный объект не двигается по слоям.
+    useEditor.getState().addObjects([obj('a'), obj('b', { locked: true }), obj('c')]);
+    useEditor.getState().moveLayer(['b'], 'front');
+    expect(useEditor.getState().objects.map((o) => o.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('moveLayer reorders unlocked objects and keeps locked ones in place', () => {
+    useEditor.getState().addObjects([obj('a'), obj('b', { locked: true }), obj('c')]);
+    useEditor.getState().moveLayer(['c'], 'front');
+    expect(useEditor.getState().objects.map((o) => o.id)).toEqual(['a', 'b', 'c']);
+    useEditor.getState().moveLayer(['a'], 'front');
+    expect(useEditor.getState().objects.map((o) => o.id)).toEqual(['b', 'c', 'a']);
   });
 });
 

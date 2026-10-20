@@ -43,6 +43,11 @@ export function ContextMenu({ menu, onClose }: Props) {
   // если кликнули по невыделенному объекту — работаем с ним одним
   const ids = menu.targetId && !selected.includes(menu.targetId) ? [menu.targetId] : selected;
   const obj = menu.targetId ? st().objects.find((o) => o.id === menu.targetId) : null;
+  // Правило блокировки: заблокированный объект нельзя удалить и переставить по слоям.
+  const hasUnlocked = ids.some((id) => {
+    const o = st().objects.find((x) => x.id === id);
+    return o && !o.locked;
+  });
 
   const run = (fn: () => void) => {
     fn();
@@ -61,10 +66,10 @@ export function ContextMenu({ menu, onClose }: Props) {
       {item('Копировать', ids.length > 0, () => st().copySelected())}
       {item('Вставить', menu.pasteable, () => st().pasteClipboard())}
       <div className="ctx-sep" />
-      {item('Поднять на слой выше', ids.length > 0, () => st().moveLayer(ids, 'up'))}
-      {item('Опустить на слой ниже', ids.length > 0, () => st().moveLayer(ids, 'down'))}
-      {item('На передний план', ids.length > 0, () => st().moveLayer(ids, 'front'))}
-      {item('На задний план', ids.length > 0, () => st().moveLayer(ids, 'back'))}
+      {item('Поднять на слой выше', hasUnlocked, () => st().moveLayer(ids, 'up'))}
+      {item('Опустить на слой ниже', hasUnlocked, () => st().moveLayer(ids, 'down'))}
+      {item('На передний план', hasUnlocked, () => st().moveLayer(ids, 'front'))}
+      {item('На задний план', hasUnlocked, () => st().moveLayer(ids, 'back'))}
       {(obj || ids.length > 0) && <div className="ctx-sep" />}
       {obj &&
         item(obj.locked ? 'Разблокировать' : 'Заблокировать', true, () =>
@@ -75,7 +80,7 @@ export function ContextMenu({ menu, onClose }: Props) {
           st().updateObject(obj.id, { visible: !obj.visible })
         )}
       <div className="ctx-sep" />
-      {item('Удалить', ids.length > 0, () => st().deleteObjects(ids))}
+      {item('Удалить', hasUnlocked, () => st().deleteObjects(ids))}
     </div>
   );
 }

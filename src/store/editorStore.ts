@@ -128,6 +128,19 @@ export function currentLiveAssetIds(): string[] {
   return currentAssetIds(useEditor.getState());
 }
 
+/**
+ * Правило блокировки: объект с locked=true защищён от структурных операций —
+ * удаления и изменения слоя (moveLayer). Перетаскивание, выравнивание и
+ * распределение блокировку уже соблюдают (см. useDragTransform/alignSelected).
+ * Правило живёт здесь, чтобы все операции проверяли его одинаково.
+ */
+function unlockedIds(objects: EditorObject[], ids: string[]): string[] {
+  return ids.filter((id) => {
+    const o = objects.find((x) => x.id === id);
+    return o && !o.locked;
+  });
+}
+
 export const useEditor = create<EditorState>()((set, get) => ({
   projectId: null,
   projectName: 'Без названия',
@@ -261,13 +274,16 @@ export const useEditor = create<EditorState>()((set, get) => ({
 
   deleteObjects: (ids) => {
     if (!ids.length) return;
-    set((s) =>
-      withHistory(s, {
-        objects: s.objects.filter((o) => !ids.includes(o.id)),
-        selectedIds: s.selectedIds.filter((id) => !ids.includes(id)),
+    set((s) => {
+      // Заблокированные объекты удалить нельзя — правило блокировки.
+      const deletable = unlockedIds(s.objects, ids);
+      if (!deletable.length) return {};
+      return withHistory(s, {
+        objects: s.objects.filter((o) => !deletable.includes(o.id)),
+        selectedIds: s.selectedIds.filter((id) => !deletable.includes(id)),
         saveStatus: 'dirty',
-      })
-    );
+      });
+    });
     // После удаления объекты могли освободить последние ссылки на ассеты — отложенно почистить сирот.
     // extraLive защищает ассеты текущего (возможно ещё не сохранённого) проекта.
     const st = get();
@@ -371,20 +387,23 @@ export const useEditor = create<EditorState>()((set, get) => ({
   moveLayer: (ids, dir) => {
     set((s) => {
       if (!ids.length) return {};
+      // Заблокированные объекты не двигаем по слоям (правило блокировки).
+      const movable = unlockedIds(s.objects, ids);
+      if (!movable.length) return {};
       let objects: EditorObject[];
       if (dir === 'front') {
-        const picked = s.objects.filter((o) => ids.includes(o.id));
-        const rest = objectsExcept(s.objects, ids);
+        const picked = s.objects.filter((o) => movable.includes(o.id));
+        const rest = objectsExcept(s.objects, movable);
         objects = [...rest, ...picked];
       } else if (dir === 'back') {
-        const picked = s.objects.filter((o) => ids.includes(o.id));
-        const rest = s.objects.filter((o) => !ids.includes(o.id));
+        const picked = s.objects.filter((o) => movable.includes(o.id));
+        const rest = s.objects.filter((o) => !movable.includes(o.id));
         objects = [...picked, ...rest];
       } else {
         const arr = [...s.objects];
         const idxs = arr
           .map((o, i) => ({ o, i }))
-          .filter(({ o }) => ids.includes(o.id))
+          .filter(({ o }) => movable.includes(o.id))
           .map(({ i }) => i);
         const step = dir === 'up' ? 1 : -1;
         const order = dir === 'up' ? [...idxs].reverse() : idxs;

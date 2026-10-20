@@ -308,14 +308,16 @@ function LayerRow({ obj }: { obj: EditorObject }) {
       </button>
       <button
         className="layer-row__btn"
-        title="Поднять слой"
+        title={obj.locked ? 'Сначала разблокируйте объект' : 'Поднять слой'}
+        disabled={obj.locked}
         onClick={() => st().moveLayer([obj.id], 'up')}
       >
         ↑
       </button>
       <button
         className="layer-row__btn"
-        title="Опустить слой"
+        title={obj.locked ? 'Сначала разблокируйте объект' : 'Опустить слой'}
+        disabled={obj.locked}
         onClick={() => st().moveLayer([obj.id], 'down')}
       >
         ↓
@@ -329,7 +331,8 @@ function LayerRow({ obj }: { obj: EditorObject }) {
       </button>
       <button
         className="layer-row__btn"
-        title="Удалить"
+        title={obj.locked ? 'Сначала разблокируйте объект' : 'Удалить'}
+        disabled={obj.locked}
         onClick={() => st().deleteObjects([obj.id])}
       >
         ✕
