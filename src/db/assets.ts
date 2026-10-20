@@ -41,7 +41,12 @@ function loadEntry(rec: AssetRecord): Promise<AssetEntry> {
       cache.set(rec.id, entry);
       resolve(entry);
     };
-    img.onerror = () => reject(new Error(`Не удалось загрузить изображение: ${rec.name}`));
+    img.onerror = () => {
+      // objectURL не попадёт в кэш — освобождаем его сразу, иначе он утечёт
+      // на каждый битый файл (revokeObjectURL никто больше не вызовет).
+      URL.revokeObjectURL(url);
+      reject(new Error(`Не удалось загрузить изображение: ${rec.name}`));
+    };
     img.src = url;
   });
 }
@@ -54,9 +59,14 @@ export async function getAssetEntry(id: string): Promise<AssetEntry | null> {
     p = getAsset(id).then((rec) => (rec ? loadEntry(rec) : null));
     pending.set(id, p);
   }
-  const entry = await p;
-  pending.delete(id);
-  return entry;
+  try {
+    return await p;
+  } finally {
+    // Убираем promise из pending в любом случае: иначе отвергнутый (битое
+    // изображение) останется в карте навсегда, и ассет станет невосстановимым
+    // в рамках сессии — повторные вызовы получали бы тот же reject.
+    pending.delete(id);
+  }
 }
 
 export async function addAsset(blob: Blob, name: string, mime?: string): Promise<string> {
@@ -69,7 +79,14 @@ export async function addAsset(blob: Blob, name: string, mime?: string): Promise
     createdAt: Date.now(),
   };
   await putAsset(rec);
-  await loadEntry(rec);
+  try {
+    await loadEntry(rec);
+  } catch (err) {
+    // Файл не декодируется — не оставляем «сироту» в БД: откатываем запись,
+    // иначе в assets будет мусор, который GC уберёт только при следующем запуске.
+    await deleteAsset(id).catch(() => undefined);
+    throw err;
+  }
   return id;
 }
 

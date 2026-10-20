@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addAsset, removeAsset, getAssetEntry, revokeCacheAsset, clearAssetCache } from './assets';
-import { getAsset } from './idb';
+import { getAsset, putAsset, listAssets } from './idb';
 
 /** jsdom не декодирует изображения — подменяем Image, которое «грузит» blob: */
 class FakeImage {
@@ -18,6 +18,22 @@ class FakeImage {
       if (v && v.startsWith('blob:')) this.onload?.();
       else this.onerror?.(new Error(`load failed: ${v}`));
     });
+  }
+}
+
+/** Image, который всегда падает при загрузке — для проверки обработки ошибок */
+class BrokenImage {
+  onload: (() => void) | null = null;
+  onerror: ((e?: unknown) => void) | null = null;
+  naturalWidth = 0;
+  naturalHeight = 0;
+  private _src = '';
+  get src() {
+    return this._src;
+  }
+  set src(v: string) {
+    this._src = v;
+    queueMicrotask(() => this.onerror?.(new Error(`load failed: ${v}`)));
   }
 }
 
@@ -122,5 +138,42 @@ describe('cache eviction', () => {
     expect(revokeSpy).toHaveBeenCalledWith(entry.url);
     expect(await getAsset(id)).toBeUndefined();
     expect(await getAssetEntry(id)).toBeNull();
+  });
+});
+
+describe('broken image handling', () => {
+  it('rejects and releases the objectURL when the image cannot be decoded', async () => {
+    vi.stubGlobal('Image', BrokenImage);
+    const revokeSpy = vi.spyOn(URL, 'revokeObjectURL');
+    await expect(addAsset(new Blob(['x'], { type: 'image/png' }), 'bad')).rejects.toThrow();
+    // objectURL не попал в кэш — обязан быть освобождён
+    expect(revokeSpy).toHaveBeenCalled();
+  });
+
+  it('does not leave an orphan record in idb when the image cannot be decoded', async () => {
+    vi.stubGlobal('Image', BrokenImage);
+    await expect(addAsset(new Blob(['x'], { type: 'image/png' }), 'bad')).rejects.toThrow();
+    const all = await listAssets();
+    // запись откатывается — в assets не остаётся «сироты» без кэш-записи
+    expect(all.every((a) => a.name !== 'bad')).toBe(true);
+  });
+
+  it('a failed load does not poison the pending cache for later retries', async () => {
+    // Регрессия: отвергнутый promise оставался в pending навсегда, и ассет
+    // становился невосстановимым в рамках сессии.
+    vi.stubGlobal('Image', BrokenImage);
+    const id = 'broken-1';
+    await putAsset({
+      id,
+      name: 'broken',
+      mime: 'image/png',
+      blob: new Blob(['x'], { type: 'image/png' }),
+      createdAt: Date.now(),
+    });
+    await expect(getAssetEntry(id)).rejects.toThrow();
+    // повторная попытка должна снова читать из БД, а не отдавать старый reject
+    vi.stubGlobal('Image', FakeImage);
+    const entry = await getAssetEntry(id);
+    expect(entry?.name).toBe('broken');
   });
 });
