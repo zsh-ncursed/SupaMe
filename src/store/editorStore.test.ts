@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useEditor } from './editorStore';
 import type { EditorObject, ProjectRecord, ShapeObject } from '../types';
 import { HISTORY_LIMIT, MAX_CANVAS, MIN_CANVAS } from '../types';
