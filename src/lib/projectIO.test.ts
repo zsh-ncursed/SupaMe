@@ -11,6 +11,7 @@ import type { AssetRecord } from '../types';
 import type { EditorObject, ProjectData, ShapeObject } from '../types';
 import * as idb from '../db/idb';
 import { getAsset } from '../db/idb';
+import { IMPORT_MAX_FILE_BYTES, IMPORT_MAX_ASSETS, IMPORT_MAX_ASSET_BYTES } from './config';
 
 // fake-indexeddb в этой среде не сохраняет identity Blob (он приходит как {}),
 // поэтому для buildExportFile подменяем только getAsset на spy, возвращающий
@@ -88,6 +89,19 @@ function supameFile(content: string, name = 'мем.json'): File {
   return new File([content], name, { type: 'application/json' });
 }
 
+/**
+ * Чистим хранилище assets между тестами: импорт пишет ассеты в IndexedDB, и
+ * без сброса следующий тест видит «чужой» ассет с тем же id (например, a1).
+ */
+async function clearAssets() {
+  const all = await idb.listAssets();
+  if (all.length) await idb.deleteManyAssets(all.map((a) => a.id));
+}
+
+beforeEach(async () => {
+  await clearAssets();
+});
+
 describe('parseImportFile', () => {
   it('rejects non-JSON files', async () => {
     await expect(parseImportFile(supameFile('не JSON'))).rejects.toThrow('Файл не является JSON');
@@ -120,6 +134,38 @@ describe('parseImportFile', () => {
   it('rejects corrupted payloads without canvas/objects', async () => {
     const body = JSON.stringify({ app: 'SupaMe', version: 1, data: { version: 1 } });
     await expect(parseImportFile(supameFile(body))).rejects.toThrow('Повреждённый файл');
+  });
+
+  it('rejects a file larger than the import limit before reading it', async () => {
+    // Файл-бомба: размер проверяется до file.text(), иначе он целиком в памяти.
+    const huge = new File(['x'], 'bomb.json', { type: 'application/json' });
+    Object.defineProperty(huge, 'size', { value: IMPORT_MAX_FILE_BYTES + 1 });
+    await expect(parseImportFile(huge)).rejects.toThrow('слишком большой');
+  });
+
+  it('rejects a project with too many embedded assets', async () => {
+    const assets = Array.from({ length: IMPORT_MAX_ASSETS + 1 }, (_, i) => ({
+      id: `a${i}`,
+      name: `pic${i}`,
+      mime: 'image/png',
+      dataUrl: `data:image/png;base64,${btoa('x')}`,
+    }));
+    const body = JSON.stringify({ app: 'SupaMe', version: 1, data: mkData(), assets });
+    await expect(parseImportFile(supameFile(body))).rejects.toThrow('слишком много изображений');
+  });
+
+  it('rejects an oversized embedded image before decoding it', async () => {
+    // Размер оценивается по длине dataUrl — до atob(), который разворачивает
+    // весь payload в память. base64 даёт ~4/3 байта на символ, поэтому берём
+    // payload заметно больше лимита.
+    const bigDataUrl = `data:image/png;base64,${'A'.repeat(IMPORT_MAX_ASSET_BYTES * 2)}`;
+    const body = JSON.stringify({
+      app: 'SupaMe',
+      version: 1,
+      data: mkData(),
+      assets: [{ id: 'a1', name: 'huge', mime: 'image/png', dataUrl: bigDataUrl }],
+    });
+    await expect(parseImportFile(supameFile(body))).rejects.toThrow('слишком большое');
   });
 
   it('imports a minimal project and derives the name from the file', async () => {

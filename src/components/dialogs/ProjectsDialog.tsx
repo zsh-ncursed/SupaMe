@@ -113,7 +113,9 @@ export function ProjectsDialog() {
       st().notify(`Проект «${rec.name}» импортирован`, 'success');
     } catch (err) {
       console.error(err);
-      st().notify('Не удалось импортировать проект', 'error');
+      // Показываем конкретную причину (размер файла, повреждение и т.п.)
+      const reason = err instanceof Error ? err.message : 'Не удалось импортировать проект';
+      st().notify(reason, 'error');
     }
   };
 

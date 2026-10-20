@@ -52,7 +52,10 @@ export function TopBar() {
       useEditor.getState().notify(`Проект «${rec.name}» импортирован`, 'success');
     } catch (err) {
       console.error(err);
-      useEditor.getState().notify('Не удалось импортировать проект', 'error');
+      // Показываем конкретную причину («файл слишком большой», «повреждён файл»),
+      // а не обобщённое сообщение — пользователь должен понять, что делать.
+      const reason = err instanceof Error ? err.message : 'Не удалось импортировать проект';
+      useEditor.getState().notify(reason, 'error');
     }
   };
 

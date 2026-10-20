@@ -2,6 +2,12 @@
 import type { ExportedProjectFile, ProjectData, ProjectRecord } from '../types';
 import { getAsset } from '../db/idb';
 import { uid, safeFileName } from './utils';
+import {
+  IMPORT_MAX_FILE_BYTES,
+  IMPORT_MAX_ASSETS,
+  IMPORT_MAX_ASSET_BYTES,
+  DOWNLOAD_REVOKE_DELAY_MS,
+} from './config';
 
 export const PROJECT_FILE_VERSION = 1; // версия формата *.supame.json
 export const SUPPORTED_DATA_VERSION = 1; // поддерживаемая версия схемы data
@@ -46,6 +52,14 @@ export async function buildExportFile(
 }
 
 export async function parseImportFile(file: File): Promise<ProjectRecord> {
+  // Ограничиваем размер до чтения: файл из интернета может быть огромным, а
+  // file.text() держит его целиком в памяти.
+  if (file.size > IMPORT_MAX_FILE_BYTES) {
+    throw new Error(
+      `Файл слишком большой (${Math.round(file.size / 1024 / 1024)} МБ). ` +
+        `Максимум — ${Math.round(IMPORT_MAX_FILE_BYTES / 1024 / 1024)} МБ`
+    );
+  }
   const text = await file.text();
   let parsed: ExportedProjectFile;
   try {
@@ -66,13 +80,29 @@ export async function parseImportFile(file: File): Promise<ProjectRecord> {
   }
   const data = migrateProjectData(parsed.data, dataVersion);
 
+  const assets = parsed.assets ?? [];
+  if (assets.length > IMPORT_MAX_ASSETS) {
+    throw new Error(
+      `В файле слишком много изображений (${assets.length}). Максимум — ${IMPORT_MAX_ASSETS}`
+    );
+  }
+
   const id = uid();
   const now = Date.now();
   // Сохраняем вложенные изображения как ассеты с теми же id (или новыми при конфликте)
-  for (const a of parsed.assets ?? []) {
+  const { putAsset, getAsset } = await import('../db/idb');
+  for (const a of assets) {
     if (!a?.dataUrl) continue;
+    // Проверяем размер до декодирования: atob() разворачивает весь payload в память.
+    const approxBytes = Math.floor((a.dataUrl.length * 3) / 4);
+    if (approxBytes > IMPORT_MAX_ASSET_BYTES) {
+      throw new Error(
+        `Изображение «${a.name ?? 'без имени'}» слишком большое ` +
+          `(${Math.round(approxBytes / 1024 / 1024)} МБ). ` +
+          `Максимум — ${Math.round(IMPORT_MAX_ASSET_BYTES / 1024 / 1024)} МБ`
+      );
+    }
     const blob = dataUrlToBlob(a.dataUrl);
-    const { putAsset, getAsset } = await import('../db/idb');
     let assetId = a.id;
     const existing = await getAsset(assetId).catch(() => undefined);
     if (existing) {
@@ -128,5 +158,5 @@ export function downloadBlob(blob: Blob, fileName: string) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_REVOKE_DELAY_MS);
 }

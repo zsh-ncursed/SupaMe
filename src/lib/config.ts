@@ -20,6 +20,15 @@ export const ARROW_REPEAT_DEBOUNCE_MS = 500;
 /** Дебаунс сборщика мусора ассетов (мс) */
 export const GC_DEBOUNCE_MS = 1500;
 
+/** Максимальный размер файла проекта при импорте (байт) — 64 МБ */
+export const IMPORT_MAX_FILE_BYTES = 64 * 1024 * 1024;
+/** Максимальное число вложенных изображений в файле проекта */
+export const IMPORT_MAX_ASSETS = 200;
+/** Максимальный размер одного вложенного изображения (байт) — 16 МБ */
+export const IMPORT_MAX_ASSET_BYTES = 16 * 1024 * 1024;
+/** Пауза перед revoke objectURL скачанного файла (мс) */
+export const DOWNLOAD_REVOKE_DELAY_MS = 5000;
+
 /** Инструменты Paint: цвета и толщина по умолчанию, диапазон толщины */
 export const DEFAULT_STROKE_COLOR = '#000000';
 export const DEFAULT_FILL_COLOR = '#FFFFFF';
