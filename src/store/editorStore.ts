@@ -305,7 +305,9 @@ export const useEditor = create<EditorState>()((set, get) => ({
     if (!clones.length) return;
     set((st) =>
       withHistory(st, {
-        objects: [...s.objects, ...clones],
+        // БЕРЁМ свежие st.objects, а не снимок s: иначе правка, случившаяся между
+        // get() и set(), потерялась бы (смешивание двух состояний в одном выражении).
+        objects: [...st.objects, ...clones],
         selectedIds: clones.map((c) => c.id),
         saveStatus: 'dirty',
       })
@@ -331,9 +333,10 @@ export const useEditor = create<EditorState>()((set, get) => ({
       copy.locked = false;
       return copy;
     });
-    set(
-      withHistory(s, {
-        objects: [...s.objects, ...clones],
+    set((st) =>
+      withHistory(st, {
+        // Свежий снимок st, а не s (см. duplicateObjects).
+        objects: [...st.objects, ...clones],
         selectedIds: clones.map((c) => c.id),
         saveStatus: 'dirty',
       })

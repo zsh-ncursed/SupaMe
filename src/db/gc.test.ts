@@ -191,6 +191,36 @@ describe('scheduleCollectGarbage', () => {
       expect(await listAssets()).toHaveLength(0);
     });
   });
+
+  it('replaces the live snapshot instead of merging it', async () => {
+    // extraLive — это СНИМОК live-множества, а не инкремент. Если второй вызов
+    // не содержит id из первого, ассет из первого вызова больше не защищён
+    // и подлежит удалению (иначе он остался бы сиротой навсегда).
+    await putAsset(mkAsset('a1'));
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    scheduleCollectGarbage(['a1']);
+    // новый вызов со снимком, где a1 уже нет
+    scheduleCollectGarbage([]);
+    await vi.advanceTimersByTimeAsync(GC_DEBOUNCE_MS + 10);
+    vi.useRealTimers();
+    await vi.waitFor(async () => {
+      expect(await listAssets()).toHaveLength(0);
+    });
+  });
+
+  it('keeps assets of the latest snapshot', async () => {
+    await putAsset(mkAsset('a1'));
+    await putAsset(mkAsset('a2'));
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    scheduleCollectGarbage(['a1']);
+    scheduleCollectGarbage(['a2']); // свежий снимок: защищён только a2
+    await vi.advanceTimersByTimeAsync(GC_DEBOUNCE_MS + 10);
+    vi.useRealTimers();
+    await vi.waitFor(async () => {
+      const left = await listAssets();
+      expect(left.map((a) => a.id)).toEqual(['a2']);
+    });
+  });
 });
 
 // вспомогательные утилиты для тестов

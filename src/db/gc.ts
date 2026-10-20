@@ -61,22 +61,24 @@ export async function collectGarbage(extraLive?: Iterable<string>): Promise<stri
 // ---- Отложенный запуск (debounce), чтобы серия одинарных удалений не сканировала БД на каждый клик ----
 
 let gcTimer: number | undefined;
-let gcPending: Set<string> | undefined;
 
+/**
+ * Запланировать сборку мусора.
+ *
+ * extraLive — СНИМОК live-множества на момент вызова, а не инкремент. Поэтому
+ * каждый новый вызов ЗАМЕНЯет ранее накопленное значение: иначе устаревшие id
+ * (например, удалённого объекта) навсегда остались бы в live-set, и их ассеты
+ * не удалялись бы никогда. Отсутствие аргумента означает «live-нет от
+ * вызывающего» — тогда защищать нечего, и накопленное значение сбрасывается.
+ */
 export function scheduleCollectGarbage(
   extraLive?: Iterable<string>,
   delayMs = GC_DEBOUNCE_MS
 ): void {
-  if (gcPending) {
-    for (const id of extraLive ?? []) gcPending.add(id);
-  } else {
-    gcPending = new Set(extraLive ?? []);
-  }
+  const live = new Set(extraLive ?? []);
   if (gcTimer !== undefined) window.clearTimeout(gcTimer);
   gcTimer = window.setTimeout(() => {
     gcTimer = undefined;
-    const extra = gcPending;
-    gcPending = undefined;
-    void collectGarbage(extra).catch(() => undefined);
+    void collectGarbage(live).catch(() => undefined);
   }, delayMs);
 }

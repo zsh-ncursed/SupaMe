@@ -2,7 +2,7 @@
 // Список строится на лёгких ProjectMeta (без загрузки Blob объектов); полный рекорд
 // читается из IndexedDB только для действий: открыть / переименовать / копию.
 import { useEffect, useRef, useState } from 'react';
-import { useEditor } from '../../store/editorStore';
+import { useEditor, currentLiveAssetIds } from '../../store/editorStore';
 import { useUi } from '../../store/uiStore';
 import {
   listProjectMeta,
@@ -100,8 +100,10 @@ export function ProjectsDialog() {
     await deleteProjectMeta(meta.id);
     st().bumpProjectsVersion();
     st().notify(`Проект «${meta.name}» удалён`);
-    // Ассеты, на которые ссылался только удалённый проект, стали сиротами — почистить
-    scheduleCollectGarbage();
+    // Ассеты, на которые ссылался только удалённый проект, стали сиротами — почистить.
+    // Передаём live-Set текущего (возможно ещё не сохранённого) проекта, иначе его
+    // ассеты тоже попадут под нож — файл проекта в БД ещё не обновлён.
+    scheduleCollectGarbage(currentLiveAssetIds());
   };
 
   const importFile = async (f: File) => {
