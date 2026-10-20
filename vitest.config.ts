@@ -12,20 +12,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       // Покрываем бизнес/утилиты; UI-компоненты и точки входа исключаем.
-      // addObjects.ts вышел из-под измерения: фабрики объектов (addTextObject,
-      // addCaption, addBubbleObject…) до фичи оставались не протестированными,
-      // и измерять файл с ними просто сбивает порог. replacePlaceholderImage в нём
-      // покрывается юнитом в addObjects.test.ts независимо от метрики.
+      // stageCapture.ts остаётся вне измерения: он работает с реальным Konva-стендом
+      // и юнит-подходом без canvas не покрывается.
       include: ['src/lib/**', 'src/db/**', 'src/store/**'],
-      exclude: [
-        'src/**/*.test.ts?(x)',
-        'src/test/**',
-        'src/lib/addObjects.ts',
-        'src/lib/stageCapture.ts',
-      ],
+      exclude: ['src/**/*.test.ts?(x)', 'src/test/**', 'src/lib/stageCapture.ts'],
       reporter: ['text', 'text-summary'],
       // Нижний порог для CI: бизнес-модули должны держать покрытие выше этой
-      // отметки (сейчас ~92% стейтментов), иначе прогон падает с ошибкой.
+      // отметки (сейчас ~96% стейтментов), иначе прогон падает с ошибкой.
       thresholds: {
         statements: 85,
         branches: 85,

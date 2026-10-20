@@ -1,8 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { replacePlaceholderImage } from './addObjects';
+import {
+  replacePlaceholderImage,
+  addTextObject,
+  addCaption,
+  addBubbleObject,
+  bubblePresetLabel,
+  addAssetObject,
+  addImageFiles,
+} from './addObjects';
 import { useEditor } from '../store/editorStore';
 import { clearAssetCache } from '../db/assets';
-import type { ImageObject } from '../types';
+import type { BubbleObject, ImageObject, TextObject } from '../types';
 
 // addObjects импортирует scheduleCollectGarbage (../db/gc) и emit (./bus) —
 // подменяем, чтобы тестировать замену изолированно.
@@ -166,6 +174,90 @@ describe('replacePlaceholderImage', () => {
     const img = obj as ImageObject;
     expect(img.placeholder).toBe(true);
     expect(img.assetId).toBe('ph-asset');
+    expect(useEditor.getState().toast?.type).toBe('error');
+  });
+});
+
+describe('object factories', () => {
+  it('addTextObject adds a centred text object sized to the canvas', () => {
+    addTextObject();
+    const obj = useEditor.getState().objects[0] as TextObject;
+    expect(obj.kind).toBe('text');
+    expect(obj.text).toBe('Текст');
+    expect(obj.x).toBe(540); // центр холста 1080
+    expect(obj.width).toBe(Math.round(1080 * 0.8));
+  });
+
+  it('addCaption places a caption at the top or bottom of the canvas', () => {
+    addCaption('top');
+    addCaption('bottom');
+    const [top, bottom] = useEditor.getState().objects as TextObject[];
+    expect(top.text).toBe('ВЕРХНЯЯ ПОДПИСЬ');
+    expect(bottom.text).toBe('НИЖНЯЯ ПОДПИСЬ');
+    expect(top.y).toBeLessThan(bottom.y);
+    expect(top.fontSize).toBeGreaterThanOrEqual(32);
+    expect(top.textTransform).toBe('uppercase');
+  });
+
+  it('addBubbleObject creates a bubble with the preset fill and a tail', () => {
+    addBubbleObject('cloud');
+    const obj = useEditor.getState().objects[0] as BubbleObject;
+    expect(obj.kind).toBe('bubble');
+    expect(obj.shape).toBe('cloud');
+    expect(obj.fill).toBe('#FFFFFF');
+    expect(obj.tail?.enabled).toBe(true);
+    expect(obj.text.value).toBe('Реплика');
+  });
+
+  it('bubblePresetLabel returns a human label for every shape', () => {
+    for (const shape of ['rounded-rect', 'ellipse', 'cloud', 'shout', 'rect'] as const) {
+      expect(bubblePresetLabel(shape).length).toBeGreaterThan(0);
+    }
+    expect(bubblePresetLabel('shout')).toBe('Крик');
+  });
+
+  it('addAssetObject adds an existing asset scaled into the canvas', async () => {
+    const { addAsset } = await import('../db/assets');
+    const id = await addAsset(new Blob(['x'], { type: 'image/png' }), 'pic');
+    await addAssetObject(id);
+    const obj = useEditor.getState().objects[0] as ImageObject;
+    expect(obj.kind).toBe('image');
+    expect(obj.assetId).toBe(id);
+    // ассет 640×480 меньше 70% холста (756) — вписывается без увеличения
+    expect(obj.width).toBe(640);
+    expect(obj.height).toBe(480);
+    expect(obj.x).toBe(540);
+    expect(obj.y).toBe(540);
+  });
+
+  it('addImageFiles adds one object per file, offsetting each by 24px', async () => {
+    const files = [
+      new File(['a'], 'a.png', { type: 'image/png' }),
+      new File(['b'], 'b.png', { type: 'image/png' }),
+    ];
+    await addImageFiles(files);
+    const objs = useEditor.getState().objects as ImageObject[];
+    expect(objs).toHaveLength(2);
+    expect(objs[1].x - objs[0].x).toBe(24);
+    expect(objs[1].y - objs[0].y).toBe(24);
+    expect(objs[0].assetId).not.toBe(objs[1].assetId);
+  });
+
+  it('addImageFiles reports a failure and adds nothing for an unreadable file', async () => {
+    vi.stubGlobal(
+      'Image',
+      class {
+        onload: (() => void) | null = null;
+        onerror: ((e?: unknown) => void) | null = null;
+        naturalWidth = 0;
+        naturalHeight = 0;
+        set src(_v: string) {
+          queueMicrotask(() => this.onerror?.(new Error('broken')));
+        }
+      }
+    );
+    await addImageFiles([new File(['x'], 'bad.png', { type: 'image/png' })]);
+    expect(useEditor.getState().objects).toHaveLength(0);
     expect(useEditor.getState().toast?.type).toBe('error');
   });
 });
