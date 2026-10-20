@@ -161,6 +161,8 @@ let placeholderId: string | null = null;
 
 async function ensurePlaceholder(): Promise<string> {
   if (placeholderId) {
+    // getAssetEntry перечитывает ассет из IndexedDB, если его нет в кэше:
+    // прежняя запись могла устареть (ассет удалён GC или вытеснен сменой проекта).
     const cached = await getAssetEntry(placeholderId).catch(() => null);
     if (cached) return placeholderId;
     placeholderId = null;
@@ -355,21 +357,29 @@ export const TEMPLATES: TemplateDef[] = [
 
 // ---------- применение шаблона ----------
 
-/** Создать новый проект из шаблона: холст + фон + объекты-заготовки */
+/**
+ * Создать новый проект из шаблона: холст + фон + объекты-заготовки.
+ *
+ * ПОРЯДОК ВАЖЕН: newProject() вызывает clearAssetCache() (revoke всех objectURL),
+ * поэтому заглушку создаём ПОСЛЕ него — иначе её assetId останется в кэше
+ * без живого objectURL, Konva получит image={undefined}, и область шаблона
+ * отрендерится пустой (кликнуть по «пустоте» нельзя).
+ */
 export async function applyTemplate(t: TemplateDef): Promise<void> {
   const st = useEditor.getState();
+  st.newProject({ width: t.width, height: t.height, background: { ...t.background } });
+  st.setProjectName(`Шаблон: ${t.name}`);
+
   let photo = '';
   if (t.needsPhoto) {
     try {
       photo = await ensurePlaceholder();
     } catch (err) {
       console.error(err);
-      st.notify('Не удалось создать заглушку изображения', 'error');
+      useEditor.getState().notify('Не удалось создать заглушку изображения', 'error');
       return;
     }
   }
-  st.newProject({ width: t.width, height: t.height, background: { ...t.background } });
-  st.setProjectName(`Шаблон: ${t.name}`);
   const objects = t.build(photo);
   if (objects.length) useEditor.getState().addObjects(objects);
   useEditor.getState().clearSelection();
